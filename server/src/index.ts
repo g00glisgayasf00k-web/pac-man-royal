@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Server } from 'socket.io';
+import { authRouter } from './authRoutes.js';
 import { attachRoomHandlers, GameRoom } from './gameRoom.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -17,6 +18,8 @@ const io = new Server(httpServer, { cors: { origin: '*' } });
 const rooms = new Map<string, GameRoom>();
 
 attachRoomHandlers(io, rooms);
+
+app.use('/api/auth', authRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, rooms: rooms.size });

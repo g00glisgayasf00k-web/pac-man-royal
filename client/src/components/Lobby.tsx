@@ -2,11 +2,14 @@ import { FormEvent, useState } from 'react';
 import { GameMode } from '../../../shared/gameTypes';
 
 interface Props {
+  defaultName: string;
+  username: string;
   onStart: (mode: GameMode, name: string) => void;
+  onLogout: () => void;
 }
 
-export function Lobby({ onStart }: Props) {
-  const [name, setName] = useState('Player');
+export function Lobby({ defaultName, username, onStart, onLogout }: Props) {
+  const [name, setName] = useState(defaultName);
   const [tab, setTab] = useState<'solo' | 'online'>('solo');
 
   const submit = (e: FormEvent, mode: GameMode) => {
@@ -16,6 +19,12 @@ export function Lobby({ onStart }: Props) {
 
   return (
     <div className="lobby">
+      <div className="lobby-account">
+        <span className="lobby-user">@{username}</span>
+        <button type="button" className="btn-ghost btn-sm" onClick={onLogout}>
+          Sign out
+        </button>
+      </div>
       <header className="hero">
         <h1>Pac-Man Battle Royale</h1>
         <p className="tagline">

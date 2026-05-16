@@ -687,3 +687,188 @@ body.game-locked #root {
     font-size: 0.72rem;
   }
 }
+
+/* Welcome / auth / onboarding gate screens */
+.gate-screen {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1.25rem;
+}
+
+.welcome-screen {
+  cursor: pointer;
+  text-align: center;
+}
+
+.welcome-inner {
+  max-width: 22rem;
+  width: 100%;
+}
+
+.welcome-logo {
+  width: 5.5rem;
+  height: 5.5rem;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcome-pac {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: var(--accent);
+  display: block;
+  animation: welcome-chomp 0.55s ease-in-out infinite alternate;
+  clip-path: polygon(100% 0, 0 0, 0 100%, 100% 50%);
+}
+
+@keyframes welcome-chomp {
+  from {
+    clip-path: polygon(100% 0, 0 0, 0 100%, 100% 50%);
+  }
+  to {
+    clip-path: polygon(100% 0, 35% 15%, 35% 85%, 100% 50%);
+  }
+}
+
+.welcome-screen h1 {
+  font-size: clamp(1.75rem, 6vw, 2.25rem);
+  background: linear-gradient(135deg, #fde68a, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.35rem;
+}
+
+.welcome-tagline {
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+
+.welcome-loader {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.welcome-loader-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  border-radius: 999px;
+  transition: width 0.15s linear;
+}
+
+.welcome-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.auth-screen .auth-card,
+.onboarding-card {
+  width: 100%;
+  max-width: 26rem;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  padding: 1.5rem;
+}
+
+.auth-header h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.auth-header p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.auth-error {
+  color: #f87171;
+  font-size: 0.85rem;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.lobby-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+}
+
+.lobby-user {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.onboarding-greeting {
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.onboarding-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.onboarding-card h2 {
+  font-size: 1.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.onboarding-body {
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 1.25rem;
+  min-height: 4.5rem;
+}
+
+.onboarding-dots {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.onboarding-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ghost-btn);
+}
+
+.onboarding-dots span.active {
+  background: var(--accent);
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.onboarding-actions .btn-primary {
+  flex: 1;
+}
