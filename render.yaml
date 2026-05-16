@@ -12,6 +12,8 @@ services:
         fromDatabase:
           name: pac-man-royal-db
           property: connectionString
+      - key: ADMIN_USERNAMES
+        value: g00gl
 
 databases:
   - name: pac-man-royal-db
