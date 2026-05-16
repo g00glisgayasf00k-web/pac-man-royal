@@ -48,17 +48,17 @@ export interface SoloLaunchOptions {
   difficulty: SoloDifficulty;
 }
 
-/** Online matches use a fixed speed multiplier on MOVE_SPEED */
-export const ONLINE_SPEED_MULTIPLIER = 32;
+/** Online matches use Medium solo speed (×8) */
+export const ONLINE_SPEED_MULTIPLIER = 8;
 
 export function soloDifficultySpeedMultiplier(difficulty: SoloDifficulty): number {
   switch (difficulty) {
     case 'medium':
-      return 32;
-    case 'hard':
-      return 64;
-    default:
       return 8;
+    case 'hard':
+      return 32;
+    default:
+      return 2;
   }
 }
 

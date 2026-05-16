@@ -1,8 +1,4 @@
-import {
-  SoloDifficulty,
-  soloDifficultyLabel,
-  soloDifficultySpeedMultiplier,
-} from '../../../../shared/gameTypes';
+import { SoloDifficulty, soloDifficultyLabel } from '../../../../shared/gameTypes';
 
 type Props = {
   difficulty: SoloDifficulty;
@@ -27,12 +23,6 @@ export function SoloDifficultySelect({ difficulty, onDifficultyChange }: Props) 
           </button>
         ))}
       </div>
-      <p className="arcade-mode-hint">
-        Speed ×{soloDifficultySpeedMultiplier(difficulty)} for Pac-Man and all ghosts.
-        {difficulty === 'easy' && ' ×8 base speed.'}
-        {difficulty === 'medium' && ' ×32 base speed.'}
-        {difficulty === 'hard' && ' ×64 base speed.'}
-      </p>
     </div>
   );
 }
