@@ -12,7 +12,7 @@ import {
 } from '../../shared/gameTypes';
 import { GameEngine } from '../../shared/gameEngine';
 import { GameCanvas } from './components/GameCanvas';
-import { Lobby } from './components/Lobby';
+import { GameModeMenu } from './components/GameModeMenu';
 import { OnlineWaiting } from './components/OnlineWaiting';
 import { Scoreboard } from './components/Scoreboard';
 import { useKeyboardInput } from './hooks/useInput';
@@ -25,15 +25,16 @@ const SERVER_URL =
   import.meta.env.VITE_SERVER_URL ??
   (import.meta.env.DEV ? 'http://localhost:3001' : window.location.origin);
 
-type Screen = 'lobby' | 'game' | 'win';
+type Screen = 'menu' | 'game' | 'win';
 
 type Props = {
   user: AuthUser;
+  launchMode: GameMode;
   onLogout: () => void;
 };
 
-export default function GameApp({ user, onLogout }: Props) {
-  const [screen, setScreen] = useState<Screen>('lobby');
+export default function GameApp({ user, launchMode, onLogout }: Props) {
+  const [screen, setScreen] = useState<Screen>('game');
   const [mode, setMode] = useState<GameMode>('local');
   const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
   const [onlineLobby, setOnlineLobby] = useState<OnlineLobbySnapshot | null>(null);
@@ -49,6 +50,7 @@ export default function GameApp({ user, onLogout }: Props) {
   const uiAccumRef = useRef(0);
   const liveSnapshotRef = useRef<GameSnapshot | null>(null);
   const resultRecordedRef = useRef(false);
+  const autoStartedRef = useRef(false);
 
   const UI_DT = 1 / UI_SNAPSHOT_HZ;
 
@@ -152,6 +154,7 @@ export default function GameApp({ user, onLogout }: Props) {
           if (!res.ok) {
             setOnlineError(res.error ?? 'Could not join');
             socket.disconnect();
+            setScreen('menu');
             return;
           }
           setPlayerId(res.playerId!);
@@ -235,14 +238,21 @@ export default function GameApp({ user, onLogout }: Props) {
     void recordGameResult(token, {
       score: me.score,
       won: snapshot.winnerId === playerId,
+      mode: 'local',
     }).catch(() => {});
   }, [screen, snapshot, mode, playerId]);
 
   useEffect(() => {
-    if (screen === 'lobby') resultRecordedRef.current = false;
+    if (screen === 'menu') resultRecordedRef.current = false;
   }, [screen]);
 
-  const backToLobby = () => {
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    autoStartedRef.current = true;
+    startGame(launchMode, user.displayName);
+  }, [launchMode, user.displayName, startGame]);
+
+  const openMenu = () => {
     stopLoop();
     socketRef.current?.disconnect();
     socketRef.current = null;
@@ -253,10 +263,10 @@ export default function GameApp({ user, onLogout }: Props) {
     setRoomCode('');
     setOnlineStatus('');
     setOnlineError('');
-    setScreen('lobby');
+    setScreen('menu');
   };
 
-  if (screen === 'lobby') {
+  if (screen === 'menu') {
     return (
       <>
         {onlineError && (
@@ -264,10 +274,13 @@ export default function GameApp({ user, onLogout }: Props) {
             {onlineError}
           </p>
         )}
-        <Lobby
+        <GameModeMenu
           displayName={user.displayName}
           username={user.username}
-          onStart={startGame}
+          onStart={(gameMode) => {
+            setOnlineError('');
+            startGame(gameMode, user.displayName);
+          }}
           onLogout={onLogout}
         />
       </>
@@ -277,7 +290,7 @@ export default function GameApp({ user, onLogout }: Props) {
   return (
     <div className="app game-screen">
       <header className="top-bar">
-        <button type="button" className="btn-ghost" onClick={backToLobby}>
+        <button type="button" className="btn-ghost" onClick={openMenu}>
           ← Menu
         </button>
         <h1>Pac-Man Battle Royale</h1>
@@ -306,7 +319,14 @@ export default function GameApp({ user, onLogout }: Props) {
           <div className="win-card">
             <h2>{snapshot.winnerName} wins!</h2>
             <p>Reached {WIN_SCORE} points</p>
-            <button type="button" className="btn-primary" onClick={backToLobby}>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => {
+                resultRecordedRef.current = false;
+                startGame(mode, user.displayName);
+              }}
+            >
               Play again
             </button>
           </div>

@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { GameMode } from '../../shared/gameTypes';
 import { fetchMe, logout } from './auth/api';
 import {
   clearSession,
@@ -18,8 +19,10 @@ type Phase = 'welcome' | 'auth' | 'onboarding' | 'game' | 'boot';
 export default function App() {
   const [phase, setPhase] = useState<Phase>('welcome');
   const [session, setSession] = useState<AuthSession | null>(null);
+  const [launchMode, setLaunchMode] = useState<GameMode>('local');
 
-  const enterGame = useCallback((s: AuthSession) => {
+  const enterGame = useCallback((s: AuthSession, mode: GameMode) => {
+    setLaunchMode(mode);
     if (hasCompletedOnboarding(s.user.id)) {
       setPhase('game');
     } else {
@@ -27,29 +30,33 @@ export default function App() {
     }
   }, []);
 
-  const afterWelcome = useCallback(async () => {
-    setPhase('boot');
-    const saved = loadSession();
-    if (!saved?.token) {
-      setPhase('auth');
-      return;
-    }
-    try {
-      const user = await fetchMe(saved.token);
-      const next = { token: saved.token, user };
-      saveSession(next);
-      setSession(next);
-      enterGame(next);
-    } catch {
-      clearSession();
-      setPhase('auth');
-    }
-  }, [enterGame]);
+  const continueToGame = useCallback(
+    async (mode: GameMode) => {
+      setLaunchMode(mode);
+      setPhase('boot');
+      const saved = loadSession();
+      if (!saved?.token) {
+        setPhase('auth');
+        return;
+      }
+      try {
+        const user = await fetchMe(saved.token);
+        const next = { token: saved.token, user };
+        saveSession(next);
+        setSession(next);
+        enterGame(next, mode);
+      } catch {
+        clearSession();
+        setPhase('auth');
+      }
+    },
+    [enterGame]
+  );
 
   const handleAuthSuccess = (s: AuthSession) => {
     saveSession(s);
     setSession(s);
-    enterGame(s);
+    enterGame(s, launchMode);
   };
 
   const handleOnboardingComplete = () => {
@@ -65,7 +72,7 @@ export default function App() {
   };
 
   if (phase === 'welcome') {
-    return <WelcomeScreen onDone={afterWelcome} />;
+    return <WelcomeScreen onPlay={continueToGame} />;
   }
 
   if (phase === 'boot') {
@@ -89,8 +96,14 @@ export default function App() {
   }
 
   if (phase === 'game' && session) {
-    return <GameApp user={session.user} onLogout={handleLogout} />;
+    return (
+      <GameApp
+        user={session.user}
+        launchMode={launchMode}
+        onLogout={handleLogout}
+      />
+    );
   }
 
-  return <WelcomeScreen onDone={afterWelcome} />;
+  return <WelcomeScreen onPlay={continueToGame} />;
 }

@@ -1,4 +1,8 @@
-import type { LeaderboardEntry, LeaderboardResponse } from '../../../shared/leaderboardTypes';
+import type {
+  LeaderboardEntry,
+  LeaderboardMode,
+  LeaderboardResponse,
+} from '../../../shared/leaderboardTypes';
 import type { AuthSession } from './types';
 
 const API_BASE =
@@ -50,14 +54,19 @@ export async function logout(token: string) {
   }).catch(() => {});
 }
 
-export async function fetchLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
-  const data = await request<LeaderboardResponse>(`/api/leaderboard?limit=${limit}`);
+export async function fetchLeaderboard(
+  mode: LeaderboardMode,
+  limit = 10
+): Promise<LeaderboardEntry[]> {
+  const data = await request<LeaderboardResponse>(
+    `/api/leaderboard?mode=${mode}&limit=${limit}`
+  );
   return data.entries;
 }
 
 export async function recordGameResult(
   token: string,
-  payload: { score: number; won: boolean }
+  payload: { score: number; won: boolean; mode: LeaderboardMode }
 ): Promise<void> {
   await request('/api/leaderboard/record', {
     method: 'POST',

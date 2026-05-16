@@ -8,7 +8,7 @@ import {
   ArcadeRuleCards,
   ArcadeTargetScore,
 } from './arcade/ArcadeLayout';
-import { OverallLeaderboard } from './arcade/OverallLeaderboard';
+import { DualLeaderboards } from './arcade/OverallLeaderboard';
 import './lobby/lobby.css';
 
 interface Props {
@@ -39,7 +39,7 @@ export function Lobby({ displayName, username, onStart, onLogout }: Props) {
       <ArcadeRuleCards />
       <ArcadePlayers />
       <ArcadeTargetScore label="TARGET SCORE TO WIN" />
-      <OverallLeaderboard />
+      <DualLeaderboards limit={5} />
 
       <div className="lobby-mode">
         <p className="section-label">— GAME MODE —</p>

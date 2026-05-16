@@ -82,6 +82,53 @@
   opacity: 0.6;
 }
 
+.arcade-gate .arcade-mode-select {
+  margin-bottom: 16px;
+}
+
+.arcade-gate .arcade-mode-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.arcade-gate .arcade-mode-tabs button {
+  flex: 1;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 12px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  background: transparent;
+  color: #888;
+  border: 1px solid #444;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.arcade-gate .arcade-mode-tabs button.active {
+  background: #ff8000;
+  color: #000;
+  border-color: #ff8000;
+}
+
+.arcade-gate .arcade-mode-tabs button:not(.active):hover:not(:disabled) {
+  border-color: #2121de;
+  color: #fff;
+}
+
+.arcade-gate .arcade-mode-tabs button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.arcade-gate .arcade-mode-hint {
+  font-size: 6px;
+  color: #888;
+  line-height: 1.8;
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
 .arcade-gate .how-to-play {
   margin-bottom: 18px;
 }
@@ -127,6 +174,18 @@
 
 .arcade-gate .players-section {
   margin-bottom: 18px;
+}
+
+.arcade-gate .leaderboards-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.arcade-gate .leaderboards-row .overall-leaderboard {
+  margin-bottom: 0;
+  min-width: 0;
 }
 
 .arcade-gate .overall-leaderboard {
@@ -451,6 +510,10 @@
 }
 
 @media (max-width: 520px) {
+  .arcade-gate .leaderboards-row {
+    grid-template-columns: 1fr;
+  }
+
   .arcade-gate .arcade-screen {
     padding: 20px 14px 28px;
   }

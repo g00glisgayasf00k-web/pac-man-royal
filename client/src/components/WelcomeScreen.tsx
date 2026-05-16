@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { WIN_SCORE } from '../../../shared/gameTypes';
+import { GameMode, WIN_SCORE } from '../../../shared/gameTypes';
 import {
   ArcadeFooter,
   ArcadeGate,
@@ -7,18 +7,20 @@ import {
   ArcadePlayers,
   ArcadeRuleCards,
 } from './arcade/ArcadeLayout';
-import { OverallLeaderboard } from './arcade/OverallLeaderboard';
+import { ArcadeModeSelect, tabToGameMode } from './arcade/ArcadeModeSelect';
+import { DualLeaderboards } from './arcade/OverallLeaderboard';
 import './welcome/welcome.css';
 
 type Props = {
-  onDone: () => void;
+  onPlay: (mode: GameMode) => void;
 };
 
 const LOAD_MS = 2800;
 
-export function WelcomeScreen({ onDone }: Props) {
+export function WelcomeScreen({ onPlay }: Props) {
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
+  const [tab, setTab] = useState<'solo' | 'online'>('solo');
 
   useEffect(() => {
     const start = performance.now();
@@ -36,21 +38,22 @@ export function WelcomeScreen({ onDone }: Props) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const continueGame = useCallback(() => {
-    if (ready) onDone();
-  }, [ready, onDone]);
+  const launch = useCallback(() => {
+    if (!ready) return;
+    onPlay(tabToGameMode(tab));
+  }, [ready, onPlay, tab]);
 
   useEffect(() => {
     if (!ready) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        continueGame();
+        launch();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [ready, continueGame]);
+  }, [ready, launch]);
 
   return (
     <ArcadeGate className="welcome-gate">
@@ -71,23 +74,20 @@ export function WelcomeScreen({ onDone }: Props) {
         </div>
       </div>
 
+      <ArcadeModeSelect tab={tab} onTabChange={setTab} />
+
       <p className={`insert ${ready ? 'blink' : ''}`}>
         {ready ? '— PRESS START —' : `LOADING… ${progress}%`}
       </p>
 
       <div className="btn-row">
-        <button
-          type="button"
-          className="btn-play"
-          disabled={!ready}
-          onClick={continueGame}
-        >
-          ▶ START GAME
+        <button type="button" className="btn-play" disabled={!ready} onClick={launch}>
+          ▶ {tab === 'solo' ? 'START GAME' : 'JOIN ONLINE'}
         </button>
       </div>
 
       <ArcadePlayers />
-      <OverallLeaderboard />
+      <DualLeaderboards limit={5} />
       <ArcadeRuleCards />
 
       <ArcadeFooter />

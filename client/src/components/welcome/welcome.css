@@ -22,6 +22,10 @@
   }
 }
 
+.arcade-gate.welcome-gate .arcade-mode-select {
+  margin-bottom: 12px;
+}
+
 .arcade-gate.welcome-gate .btn-row .btn-play {
   width: 100%;
   flex: none;

@@ -1,3 +1,5 @@
+export type LeaderboardMode = 'local' | 'online';
+
 export interface LeaderboardEntry {
   rank: number;
   username: string;
@@ -14,4 +16,5 @@ export interface LeaderboardResponse {
 export interface RecordGamePayload {
   score: number;
   won: boolean;
+  mode: LeaderboardMode;
 }

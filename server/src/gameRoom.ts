@@ -174,7 +174,8 @@ export class GameRoom {
           rp.username,
           rp.displayName,
           ps.score,
-          rp.id === winnerId
+          rp.id === winnerId,
+          'online'
         );
       } catch (err) {
         console.error('Leaderboard record failed:', err);

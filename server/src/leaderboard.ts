@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { LeaderboardEntry } from '../../shared/leaderboardTypes.js';
+import type { LeaderboardEntry, LeaderboardMode } from '../../shared/leaderboardTypes.js';
 import { getUserByToken } from './auth.js';
 import { useDatabase, getPool } from './db.js';
 
@@ -11,6 +11,7 @@ const LEADERBOARD_FILE = path.join(DATA_DIR, 'leaderboard.json');
 
 interface StatsRecord {
   userId: string;
+  mode: LeaderboardMode;
   username: string;
   displayName: string;
   wins: number;
@@ -26,6 +27,14 @@ interface LeaderboardStore {
 let store: LeaderboardStore = { entries: {} };
 let fileLoaded = false;
 
+function storeKey(userId: string, mode: LeaderboardMode) {
+  return `${userId}:${mode}`;
+}
+
+function normalizeMode(mode: unknown): LeaderboardMode {
+  return mode === 'online' ? 'online' : 'local';
+}
+
 async function ensureDataDir() {
   await fs.mkdir(DATA_DIR, { recursive: true });
 }
@@ -35,7 +44,19 @@ async function loadFileStore() {
   await ensureDataDir();
   try {
     const raw = await fs.readFile(LEADERBOARD_FILE, 'utf8');
-    store = JSON.parse(raw) as LeaderboardStore;
+    const parsed = JSON.parse(raw) as LeaderboardStore;
+    store = { entries: {} };
+    for (const [key, row] of Object.entries(parsed.entries ?? {})) {
+      if (row.mode) {
+        store.entries[storeKey(row.userId, row.mode)] = row;
+      } else {
+        const legacy = row as StatsRecord & { mode?: LeaderboardMode };
+        store.entries[storeKey(legacy.userId, 'local')] = {
+          ...legacy,
+          mode: 'local',
+        };
+      }
+    }
   } catch {
     store = { entries: {} };
     await saveFileStore();
@@ -62,7 +83,10 @@ function toEntries(rows: StatsRecord[]): LeaderboardEntry[] {
     }));
 }
 
-export async function getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
+export async function getLeaderboard(
+  mode: LeaderboardMode,
+  limit = 10
+): Promise<LeaderboardEntry[]> {
   const cap = Math.min(50, Math.max(1, limit));
 
   if (useDatabase()) {
@@ -76,9 +100,10 @@ export async function getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
       `SELECT u.username, u.display_name, s.wins, s.total_points, s.games_played
        FROM leaderboard_stats s
        JOIN users u ON u.id = s.user_id
+       WHERE s.mode = $1
        ORDER BY s.wins DESC, s.total_points DESC
-       LIMIT $1`,
-      [cap]
+       LIMIT $2`,
+      [mode, cap]
     );
     return rows.map((row, i) => ({
       rank: i + 1,
@@ -91,48 +116,19 @@ export async function getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
   }
 
   await loadFileStore();
-  return toEntries(Object.values(store.entries)).slice(0, cap);
+  const rows = Object.values(store.entries).filter((e) => e.mode === mode);
+  return toEntries(rows).slice(0, cap);
 }
 
 export async function recordGameResult(
   token: string | undefined,
   score: number,
-  won: boolean
+  won: boolean,
+  mode: LeaderboardMode
 ): Promise<void> {
   const user = await getUserByToken(token);
   if (!user) throw new Error('Not authenticated');
-
-  const pts = Math.max(0, Math.floor(score));
-  const now = Date.now();
-
-  if (useDatabase()) {
-    const pool = getPool();
-    await pool.query(
-      `INSERT INTO leaderboard_stats (user_id, wins, total_points, games_played, updated_at)
-       VALUES ($1, $2, $3, 1, $4)
-       ON CONFLICT (user_id) DO UPDATE SET
-         wins = leaderboard_stats.wins + EXCLUDED.wins,
-         total_points = leaderboard_stats.total_points + EXCLUDED.total_points,
-         games_played = leaderboard_stats.games_played + 1,
-         updated_at = EXCLUDED.updated_at`,
-      [user.id, won ? 1 : 0, pts, now]
-    );
-    return;
-  }
-
-  await loadFileStore();
-  const existing = store.entries[user.id];
-  const next: StatsRecord = {
-    userId: user.id,
-    username: user.username,
-    displayName: user.displayName,
-    wins: (existing?.wins ?? 0) + (won ? 1 : 0),
-    totalPoints: (existing?.totalPoints ?? 0) + pts,
-    gamesPlayed: (existing?.gamesPlayed ?? 0) + 1,
-    updatedAt: now,
-  };
-  store.entries[user.id] = next;
-  await saveFileStore();
+  await recordGameResultForUser(user.id, user.username, user.displayName, score, won, mode);
 }
 
 export async function recordGameResultForUser(
@@ -140,29 +136,33 @@ export async function recordGameResultForUser(
   username: string,
   displayName: string,
   score: number,
-  won: boolean
+  won: boolean,
+  mode: LeaderboardMode
 ): Promise<void> {
   const pts = Math.max(0, Math.floor(score));
   const now = Date.now();
+  const gameMode = normalizeMode(mode);
 
   if (useDatabase()) {
     await getPool().query(
-      `INSERT INTO leaderboard_stats (user_id, wins, total_points, games_played, updated_at)
-       VALUES ($1, $2, $3, 1, $4)
-       ON CONFLICT (user_id) DO UPDATE SET
+      `INSERT INTO leaderboard_stats (user_id, mode, wins, total_points, games_played, updated_at)
+       VALUES ($1, $2, $3, $4, 1, $5)
+       ON CONFLICT (user_id, mode) DO UPDATE SET
          wins = leaderboard_stats.wins + EXCLUDED.wins,
          total_points = leaderboard_stats.total_points + EXCLUDED.total_points,
          games_played = leaderboard_stats.games_played + 1,
          updated_at = EXCLUDED.updated_at`,
-      [userId, won ? 1 : 0, pts, now]
+      [userId, gameMode, won ? 1 : 0, pts, now]
     );
     return;
   }
 
   await loadFileStore();
-  const existing = store.entries[userId];
-  store.entries[userId] = {
+  const key = storeKey(userId, gameMode);
+  const existing = store.entries[key];
+  store.entries[key] = {
     userId,
+    mode: gameMode,
     username,
     displayName,
     wins: (existing?.wins ?? 0) + (won ? 1 : 0),
