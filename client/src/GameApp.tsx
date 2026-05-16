@@ -6,10 +6,14 @@ import {
   GameMode,
   GameSnapshot,
   MAX_SIM_STEPS_PER_FRAME,
+  MOVE_SPEED,
   OnlineLaunchOptions,
   OnlineLobbySnapshot,
+  SoloLaunchOptions,
   UI_SNAPSHOT_HZ,
   ghostNameForSlot,
+  soloDifficultyLabel,
+  soloDifficultySpeedMultiplier,
   WIN_SCORE,
 } from '../../shared/gameTypes';
 import { GameEngine } from '../../shared/gameEngine';
@@ -41,6 +45,7 @@ type Props = {
   user: AuthUser;
   launchMode: GameMode;
   onlineLaunch: OnlineLaunchOptions;
+  soloLaunch: SoloLaunchOptions;
   onExitToWelcome: () => void;
 };
 
@@ -48,6 +53,7 @@ export default function GameApp({
   user,
   launchMode,
   onlineLaunch,
+  soloLaunch,
   onExitToWelcome,
 }: Props) {
   const [screen, setScreen] = useState<Screen>('game');
@@ -68,6 +74,8 @@ export default function GameApp({
   const autoStartedRef = useRef(false);
   const onlineLaunchRef = useRef(onlineLaunch);
   onlineLaunchRef.current = onlineLaunch;
+  const soloLaunchRef = useRef(soloLaunch);
+  soloLaunchRef.current = soloLaunch;
 
   const UI_DT = 1 / UI_SNAPSHOT_HZ;
 
@@ -162,7 +170,7 @@ export default function GameApp({
   );
 
   const startGame = useCallback(
-    (gameMode: GameMode, name: string, online?: OnlineLaunchOptions) => {
+    (gameMode: GameMode, name: string, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => {
       setMode(gameMode);
       if (gameMode === 'online') {
         const join = online ?? onlineLaunchRef.current;
@@ -229,9 +237,13 @@ export default function GameApp({
         { id: 'g4', name: ghostNameForSlot(4), slot: 4, isAI: true },
       ];
 
+      const soloOpts = solo ?? soloLaunchRef.current;
+      const speedMult = soloDifficultySpeedMultiplier(soloOpts.difficulty);
+      const moveSpeed = MOVE_SPEED * speedMult;
+
       setPlayerId(configs[0].id);
       setPlayerSlot(0);
-      engineRef.current = new GameEngine(configs);
+      engineRef.current = new GameEngine(configs, { moveSpeed });
       const initial = engineRef.current.getSnapshot();
       liveSnapshotRef.current = initial;
       setSnapshot(initial);
@@ -297,8 +309,13 @@ export default function GameApp({
   useEffect(() => {
     if (autoStartedRef.current) return;
     autoStartedRef.current = true;
-    startGame(launchMode, user.displayName, launchMode === 'online' ? onlineLaunch : undefined);
-  }, [launchMode, onlineLaunch, user.displayName, startGame]);
+    startGame(
+      launchMode,
+      user.displayName,
+      launchMode === 'online' ? onlineLaunch : undefined,
+      launchMode === 'local' ? soloLaunch : undefined
+    );
+  }, [launchMode, onlineLaunch, soloLaunch, user.displayName, startGame]);
 
   const playAgain = useCallback(() => {
     cleanupMatch();
@@ -314,6 +331,12 @@ export default function GameApp({
           ← Exit
         </button>
         <h1>Pac-Man Battle Royale</h1>
+        {mode === 'local' && (
+          <span className="room-tag">
+            {soloDifficultyLabel(soloLaunchRef.current.difficulty)} · ×
+            {soloDifficultySpeedMultiplier(soloLaunchRef.current.difficulty)}
+          </span>
+        )}
         {onlineStatus && <span className="room-tag">{onlineStatus}</span>}
       </header>
 

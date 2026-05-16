@@ -117,8 +117,14 @@ export class GameEngine {
   private aiTimer = 0;
   private nextFruitSpawnAt = 0;
   private fruitIdSeq = 0;
+  /** Base move speed for this match (defaults to MOVE_SPEED) */
+  private moveSpeed: number;
 
-  constructor(playerConfigs: { id: string; name: string; slot: number; isAI: boolean }[]) {
+  constructor(
+    playerConfigs: { id: string; name: string; slot: number; isAI: boolean }[],
+    options?: { moveSpeed?: number }
+  ) {
+    this.moveSpeed = options?.moveSpeed ?? MOVE_SPEED;
     const { pellets, powerPellets, powerRespawnAt } = clonePellets();
     this.pellets = pellets;
     this.powerPellets = powerPellets;
@@ -184,9 +190,9 @@ export class GameEngine {
   private getMoveSpeed(p: PlayerState, now: number): number {
     const isPac = p.id === this.pacmanId && p.role === 'pacman';
     if (isPac && p.speedBoostUntil > now) {
-      return MOVE_SPEED * POWER_SPEED_MULT;
+      return this.moveSpeed * POWER_SPEED_MULT;
     }
-    return MOVE_SPEED;
+    return this.moveSpeed;
   }
 
   private updatePowerPellets(now: number) {

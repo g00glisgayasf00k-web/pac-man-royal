@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { GameMode, OnlineLaunchOptions } from '../../shared/gameTypes';
+import { GameMode, OnlineLaunchOptions, SoloLaunchOptions } from '../../shared/gameTypes';
 import { fetchMe, logout } from './auth/api';
 import {
   clearSession,
@@ -27,22 +27,29 @@ export default function App() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [launchMode, setLaunchMode] = useState<GameMode>('local');
   const [onlineLaunch, setOnlineLaunch] = useState<OnlineLaunchOptions>({ joinMode: 'quick' });
+  const [soloLaunch, setSoloLaunch] = useState<SoloLaunchOptions>({ difficulty: 'easy' });
 
-  const enterGame = useCallback((s: AuthSession, mode: GameMode, online?: OnlineLaunchOptions) => {
-    setLaunchMode(mode);
-    if (online) setOnlineLaunch(online);
-    else if (mode === 'local') setOnlineLaunch({ joinMode: 'quick' });
-    if (hasCompletedOnboarding(s.user.id)) {
-      setPhase('game');
-    } else {
-      setPhase('onboarding');
-    }
-  }, []);
-
-  const continueToGame = useCallback(
-    async (mode: GameMode, online?: OnlineLaunchOptions) => {
+  const enterGame = useCallback(
+    (s: AuthSession, mode: GameMode, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => {
       setLaunchMode(mode);
       if (online) setOnlineLaunch(online);
+      else if (mode === 'local') setOnlineLaunch({ joinMode: 'quick' });
+      if (solo) setSoloLaunch(solo);
+      else if (mode === 'local') setSoloLaunch({ difficulty: 'easy' });
+      if (hasCompletedOnboarding(s.user.id)) {
+        setPhase('game');
+      } else {
+        setPhase('onboarding');
+      }
+    },
+    []
+  );
+
+  const continueToGame = useCallback(
+    async (mode: GameMode, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => {
+      setLaunchMode(mode);
+      if (online) setOnlineLaunch(online);
+      if (solo) setSoloLaunch(solo);
       setPhase('boot');
       const saved = loadSession();
       if (!saved?.token) {
@@ -119,6 +126,7 @@ export default function App() {
         user={session.user}
         launchMode={launchMode}
         onlineLaunch={onlineLaunch}
+        soloLaunch={soloLaunch}
         onExitToWelcome={handleExitToWelcome}
       />
     );

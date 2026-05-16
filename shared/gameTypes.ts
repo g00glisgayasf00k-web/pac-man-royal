@@ -40,6 +40,35 @@ export interface OnlineLaunchOptions {
   /** Required when joinMode is 'join' */
   code?: string;
 }
+
+/** Solo vs AI difficulty — each step doubles Pac-Man and ghost speed */
+export type SoloDifficulty = 'easy' | 'medium' | 'hard';
+
+export interface SoloLaunchOptions {
+  difficulty: SoloDifficulty;
+}
+
+export function soloDifficultySpeedMultiplier(difficulty: SoloDifficulty): number {
+  switch (difficulty) {
+    case 'medium':
+      return 2;
+    case 'hard':
+      return 4;
+    default:
+      return 1;
+  }
+}
+
+export function soloDifficultyLabel(difficulty: SoloDifficulty): string {
+  switch (difficulty) {
+    case 'medium':
+      return 'Medium';
+    case 'hard':
+      return 'Hard';
+    default:
+      return 'Easy';
+  }
+}
 export type Role = 'pacman' | 'ghost';
 
 export const PLAYER_SLOT_COLORS = [

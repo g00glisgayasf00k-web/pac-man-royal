@@ -161,6 +161,34 @@
   margin-top: 10px;
 }
 
+.arcade-gate .solo-difficulty-select {
+  margin-bottom: 12px;
+}
+
+.arcade-gate .solo-difficulty-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.arcade-gate .solo-difficulty-tabs button {
+  flex: 1;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  padding: 10px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  color: #888;
+  border: 1px solid #444;
+}
+
+.arcade-gate .solo-difficulty-tabs button.active {
+  background: #ff8000;
+  color: #000;
+  border-color: #ff8000;
+}
+
 .arcade-gate .online-join-code-input {
   width: 100%;
   box-sizing: border-box;

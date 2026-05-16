@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { GameMode, OnlineJoinMode, OnlineLaunchOptions, WIN_SCORE } from '../../../shared/gameTypes';
+import type { SoloLaunchOptions } from '../../../shared/gameTypes';
+import {
+  GameMode,
+  OnlineJoinMode,
+  OnlineLaunchOptions,
+  SoloDifficulty,
+  WIN_SCORE,
+} from '../../../shared/gameTypes';
 import {
   ArcadeFooter,
   ArcadeGate,
@@ -9,12 +16,13 @@ import {
 } from './arcade/ArcadeLayout';
 import { ArcadeModeSelect, tabToGameMode } from './arcade/ArcadeModeSelect';
 import { OnlineJoinSelect } from './arcade/OnlineJoinSelect';
+import { SoloDifficultySelect } from './arcade/SoloDifficultySelect';
 import { DualLeaderboards } from './arcade/OverallLeaderboard';
 import { clearRoomFromUrl, readRoomCodeFromUrl } from '../utils/roomInvite';
 import './welcome/welcome.css';
 
 type Props = {
-  onPlay: (mode: GameMode, online?: OnlineLaunchOptions) => void;
+  onPlay: (mode: GameMode, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => void;
   onLogout?: () => void;
 };
 
@@ -26,6 +34,7 @@ export function WelcomeScreen({ onPlay, onLogout }: Props) {
   const [tab, setTab] = useState<'solo' | 'online'>('solo');
   const [onlineJoinMode, setOnlineJoinMode] = useState<OnlineJoinMode>('quick');
   const [joinCode, setJoinCode] = useState('');
+  const [soloDifficulty, setSoloDifficulty] = useState<SoloDifficulty>('easy');
 
   useEffect(() => {
     const fromUrl = readRoomCodeFromUrl();
@@ -103,6 +112,10 @@ export function WelcomeScreen({ onPlay, onLogout }: Props) {
       </div>
 
       <ArcadeModeSelect tab={tab} onTabChange={setTab} />
+
+      {tab === 'solo' && (
+        <SoloDifficultySelect difficulty={soloDifficulty} onDifficultyChange={setSoloDifficulty} />
+      )}
 
       {tab === 'online' && (
         <OnlineJoinSelect
