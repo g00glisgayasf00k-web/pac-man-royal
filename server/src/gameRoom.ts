@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import {
   FIXED_DT,
   MAX_SIM_STEPS_PER_FRAME,
+  ghostNameForSlot,
   type GameSnapshot,
   type InputPayload,
   type OnlineLobbySnapshot,
@@ -74,11 +75,12 @@ export class GameRoom {
   }
 
   fillWithAI() {
-    const names = ['Red Bot', 'Pink Bot', 'Cyan Bot', 'Orange Bot'];
     let i = 0;
     while (this.players.size < MAX_PLAYERS) {
       const id = `ai-${this.code}-${i}`;
-      this.addPlayer(id, names[i] ?? `Bot ${i}`, null, this.players.size);
+      const added = this.addPlayer(id, 'GHOST', null);
+      if (!added) break;
+      added.name = ghostNameForSlot(added.slot);
       i++;
     }
   }

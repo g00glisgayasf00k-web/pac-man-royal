@@ -74,3 +74,14 @@ This project uses **PostgreSQL** when `DATABASE_URL` is set (configured automati
 Local dev without Postgres still uses `server/data/users.json` (fine for testing only).
 
 Check persistence after deploy: open `https://YOUR-APP.onrender.com/api/health` — `userStore` should be `"postgres"`, not `"file"`.
+
+## Publishing to Google Play Store
+
+This game is a web app backed by a server. The usual approach is to wrap your **live Render URL** in an Android shell (TWA or Capacitor), not to rewrite the game in native code.
+
+See **[PLAY_STORE.md](./PLAY_STORE.md)** for a full guide covering:
+
+- Trusted Web Activity (Bubblewrap) — recommended
+- Capacitor as an alternative
+- Play Console requirements (privacy policy, content rating, `.aab` upload)
+- Checklist and notes for online play, accounts, and naming

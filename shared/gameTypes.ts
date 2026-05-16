@@ -96,6 +96,18 @@ export interface OnlineLobbySnapshot {
 }
 
 export const PLAYER_COLORS = ['#FFD700', '#FF4444', '#FF69B4', '#00FFFF', '#FF8C00'];
-export const PLAYER_NAMES = ['Yellow', 'Red', 'Pink', 'Cyan', 'Orange'];
+
+/** Display names matching the welcome screen player cards */
+export const PACMAN_DISPLAY_NAME = 'PAC-MAN';
+export const GHOST_AI_NAMES = ['BLINKY', 'PINKY', 'INKY', 'CLYDE'] as const;
+
+export const PLAYER_NAMES = [PACMAN_DISPLAY_NAME, ...GHOST_AI_NAMES];
+
+export function ghostNameForSlot(slot: number): string {
+  if (slot >= 1 && slot <= GHOST_AI_NAMES.length) {
+    return GHOST_AI_NAMES[slot - 1];
+  }
+  return `GHOST ${slot}`;
+}
 
 export type { FruitState };

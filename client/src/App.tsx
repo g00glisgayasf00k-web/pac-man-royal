@@ -71,6 +71,10 @@ export default function App() {
     setPhase('auth');
   };
 
+  const handleExitToWelcome = () => {
+    setPhase('welcome');
+  };
+
   if (phase === 'welcome') {
     return <WelcomeScreen onPlay={continueToGame} />;
   }
@@ -101,6 +105,7 @@ export default function App() {
         user={session.user}
         launchMode={launchMode}
         onLogout={handleLogout}
+        onExitToWelcome={handleExitToWelcome}
       />
     );
   }

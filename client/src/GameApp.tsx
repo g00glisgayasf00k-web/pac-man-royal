@@ -8,6 +8,7 @@ import {
   MAX_SIM_STEPS_PER_FRAME,
   OnlineLobbySnapshot,
   UI_SNAPSHOT_HZ,
+  ghostNameForSlot,
   WIN_SCORE,
 } from '../../shared/gameTypes';
 import { GameEngine } from '../../shared/gameEngine';
@@ -31,9 +32,10 @@ type Props = {
   user: AuthUser;
   launchMode: GameMode;
   onLogout: () => void;
+  onExitToWelcome: () => void;
 };
 
-export default function GameApp({ user, launchMode, onLogout }: Props) {
+export default function GameApp({ user, launchMode, onLogout, onExitToWelcome }: Props) {
   const [screen, setScreen] = useState<Screen>('game');
   const [mode, setMode] = useState<GameMode>('local');
   const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
@@ -171,10 +173,10 @@ export default function GameApp({ user, launchMode, onLogout }: Props) {
 
       const configs = [
         { id: 'p0', name, slot: 0, isAI: false },
-        { id: 'g1', name: 'Red AI', slot: 1, isAI: true },
-        { id: 'g2', name: 'Pink AI', slot: 2, isAI: true },
-        { id: 'g3', name: 'Cyan AI', slot: 3, isAI: true },
-        { id: 'g4', name: 'Orange AI', slot: 4, isAI: true },
+        { id: 'g1', name: ghostNameForSlot(1), slot: 1, isAI: true },
+        { id: 'g2', name: ghostNameForSlot(2), slot: 2, isAI: true },
+        { id: 'g3', name: ghostNameForSlot(3), slot: 3, isAI: true },
+        { id: 'g4', name: ghostNameForSlot(4), slot: 4, isAI: true },
       ];
 
       setPlayerId(configs[0].id);
@@ -252,7 +254,7 @@ export default function GameApp({ user, launchMode, onLogout }: Props) {
     startGame(launchMode, user.displayName);
   }, [launchMode, user.displayName, startGame]);
 
-  const openMenu = () => {
+  const cleanupMatch = useCallback(() => {
     stopLoop();
     socketRef.current?.disconnect();
     socketRef.current = null;
@@ -263,6 +265,24 @@ export default function GameApp({ user, launchMode, onLogout }: Props) {
     setRoomCode('');
     setOnlineStatus('');
     setOnlineError('');
+  }, [stopLoop]);
+
+  const playAgain = useCallback(() => {
+    cleanupMatch();
+    resultRecordedRef.current = false;
+    setScreen('game');
+    startGame(mode, user.displayName);
+  }, [cleanupMatch, mode, user.displayName, startGame]);
+
+  const exitToWelcome = useCallback(() => {
+    cleanupMatch();
+    resultRecordedRef.current = false;
+    autoStartedRef.current = false;
+    onExitToWelcome();
+  }, [cleanupMatch, onExitToWelcome]);
+
+  const openMenu = () => {
+    cleanupMatch();
     setScreen('menu');
   };
 
@@ -319,16 +339,14 @@ export default function GameApp({ user, launchMode, onLogout }: Props) {
           <div className="win-card">
             <h2>{snapshot.winnerName} wins!</h2>
             <p>Reached {WIN_SCORE} points</p>
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={() => {
-                resultRecordedRef.current = false;
-                startGame(mode, user.displayName);
-              }}
-            >
-              Play again
-            </button>
+            <div className="win-actions">
+              <button type="button" className="btn-primary" onClick={playAgain}>
+                Play again
+              </button>
+              <button type="button" className="btn-ghost" onClick={exitToWelcome}>
+                Exit
+              </button>
+            </div>
           </div>
         </div>
       )}
