@@ -36,9 +36,11 @@ import {
 import {
   findSpawnPoints,
   getBattleStartPosition,
+  isTunnelRow,
   isWalkable,
   isWall,
   MAZE_COLS,
+  wrapCol,
   MAZE_LAYOUT,
   MAZE_ROWS,
   tileCenter,
@@ -327,7 +329,8 @@ export class GameEngine {
     if (dir === 'none') return false;
     const { dx, dy } = DIRS[dir];
     const { col, row } = worldToTile(p.x, p.y);
-    return isWalkable(col + dx, row + dy);
+    const nc = dx !== 0 && isTunnelRow(row) ? wrapCol(col + dx, row) : col + dx;
+    return isWalkable(nc, row + dy);
   }
 
   private tileCenterAt(x: number, y: number) {
@@ -376,7 +379,11 @@ export class GameEngine {
     const { dx, dy } = DIRS[dir];
     const probeX = x + dx * 0.42;
     const probeY = y + dy * 0.42;
-    const { col, row } = worldToTile(probeX, probeY);
+    let { col, row } = worldToTile(probeX, probeY);
+    if (isTunnelRow(row) && dx !== 0) {
+      col = wrapCol(col, row);
+      return !isWalkable(col, row);
+    }
     return isWall(col, row);
   }
 
@@ -405,17 +412,13 @@ export class GameEngine {
     if (dx !== 0) ny = Math.floor(p.y) + 0.5;
     if (dy !== 0) nx = Math.floor(p.x) + 0.5;
 
+    const tunnelRow = Math.floor(ny);
+    if (isTunnelRow(tunnelRow) && dx !== 0) {
+      if (nx < 0) nx += MAZE_COLS;
+      else if (nx >= MAZE_COLS) nx -= MAZE_COLS;
+    }
+
     if (this.wouldHitWall(p.x, p.y, p.dir)) {
-      if (dx !== 0) {
-        let wrapped = nx;
-        if (wrapped < 0) wrapped += MAZE_COLS;
-        if (wrapped >= MAZE_COLS) wrapped -= MAZE_COLS;
-        if (!this.wouldHitWall(wrapped, ny, p.dir)) {
-          p.x = wrapped;
-          p.y = ny;
-          return;
-        }
-      }
       const { cx, cy } = this.tileCenterAt(p.x, p.y);
       p.x = cx;
       p.y = cy;

@@ -2,9 +2,11 @@ import { Direction } from './gameTypes';
 import {
   GHOST_PEN_EXIT_TILE,
   isGhostPenArea,
+  isTunnelRow,
   isWalkable,
   MAZE_COLS,
   MAZE_ROWS,
+  wrapCol,
 } from './maze';
 
 const DIRS: Direction[] = ['up', 'down', 'left', 'right'];
@@ -29,6 +31,14 @@ export function oppositeDir(d: Direction): Direction {
 
 function key(col: number, row: number) {
   return `${col},${row}`;
+}
+
+function stepTile(col: number, row: number, dir: Direction): { col: number; row: number } | null {
+  const { dx, dy } = DELTAS[dir];
+  const nr = row + dy;
+  const nc = dy === 0 && isTunnelRow(row) ? wrapCol(col + dx, row) : col + dx;
+  if (!isWalkable(nc, nr)) return null;
+  return { col: nc, row: nr };
 }
 
 function clampTile(col: number, row: number): { col: number; row: number } {
@@ -59,14 +69,13 @@ export function bfsDistance(
   while (q.length) {
     const { col, row, dist } = q.shift()!;
     for (const dir of DIRS) {
-      const { dx, dy } = DELTAS[dir];
-      const nc = col + dx;
-      const nr = row + dy;
-      const k = key(nc, nr);
-      if (!isWalkable(nc, nr) || seen.has(k)) continue;
-      if (nc === toCol && nr === toRow) return dist + 1;
+      const next = stepTile(col, row, dir);
+      if (!next) continue;
+      const k = key(next.col, next.row);
+      if (seen.has(k)) continue;
+      if (next.col === toCol && next.row === toRow) return dist + 1;
       seen.add(k);
-      q.push({ col: nc, row: nr, dist: dist + 1 });
+      q.push({ col: next.col, row: next.row, dist: dist + 1 });
     }
   }
   return Infinity;
@@ -91,15 +100,14 @@ export function bfsFirstDirection(
     const { col, row, first } = q.shift()!;
     for (const dir of DIRS) {
       if (first === null && forbidDir !== 'none' && dir === forbidDir) continue;
-      const { dx, dy } = DELTAS[dir];
-      const nc = col + dx;
-      const nr = row + dy;
-      const k = key(nc, nr);
-      if (!isWalkable(nc, nr) || seen.has(k)) continue;
+      const next = stepTile(col, row, dir);
+      if (!next) continue;
+      const k = key(next.col, next.row);
+      if (seen.has(k)) continue;
       seen.add(k);
       const step = first ?? dir;
-      if (nc === toCol && nr === toRow) return step;
-      q.push({ col: nc, row: nr, first: step });
+      if (next.col === toCol && next.row === toRow) return step;
+      q.push({ col: next.col, row: next.row, first: step });
     }
   }
   return 'none';
@@ -176,16 +184,15 @@ export function chooseGhostDirection(
   // Fallback: greedy step toward target among legal turns
   const choices = DIRS.filter((d) => {
     if (d === forbid) return false;
-    const { dx, dy } = DELTAS[d];
-    return isWalkable(col + dx, row + dy);
+    return stepTile(col, row, d) !== null;
   });
   if (!choices.length) return ghost.dir !== 'none' ? ghost.dir : 'left';
 
   let best = choices[0];
   let bestDist = Infinity;
   for (const d of choices) {
-    const { dx, dy } = DELTAS[d];
-    const d0 = bfsDistance(col + dx, row + dy, target.col, target.row);
+    const next = stepTile(col, row, d)!;
+    const d0 = bfsDistance(next.col, next.row, target.col, target.row);
     if (d0 < bestDist) {
       bestDist = d0;
       best = d;
@@ -281,8 +288,7 @@ export function choosePacmanDirection(
 
   const choices = DIRS.filter((d) => {
     if (d === forbid) return false;
-    const { dx, dy } = DELTAS[d];
-    return isWalkable(col + dx, row + dy);
+    return stepTile(col, row, d) !== null;
   });
   return choices[0] ?? 'left';
 }
