@@ -6,6 +6,7 @@ import {
   GameMode,
   GameSnapshot,
   MAX_SIM_STEPS_PER_FRAME,
+  OnlineLaunchOptions,
   OnlineLobbySnapshot,
   UI_SNAPSHOT_HZ,
   ghostNameForSlot,
@@ -28,14 +29,30 @@ const SERVER_URL =
 
 type Screen = 'menu' | 'game' | 'win';
 
+type JoinResponse = {
+  ok: boolean;
+  code?: string;
+  playerId?: string;
+  slot?: number;
+  lobby?: OnlineLobbySnapshot;
+  error?: string;
+};
+
 type Props = {
   user: AuthUser;
   launchMode: GameMode;
+  onlineLaunch: OnlineLaunchOptions;
   onLogout: () => void;
   onExitToWelcome: () => void;
 };
 
-export default function GameApp({ user, launchMode, onLogout, onExitToWelcome }: Props) {
+export default function GameApp({
+  user,
+  launchMode,
+  onlineLaunch,
+  onLogout,
+  onExitToWelcome,
+}: Props) {
   const [screen, setScreen] = useState<Screen>('game');
   const [mode, setMode] = useState<GameMode>('local');
   const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
@@ -53,6 +70,8 @@ export default function GameApp({ user, launchMode, onLogout, onExitToWelcome }:
   const liveSnapshotRef = useRef<GameSnapshot | null>(null);
   const resultRecordedRef = useRef(false);
   const autoStartedRef = useRef(false);
+  const onlineLaunchRef = useRef(onlineLaunch);
+  onlineLaunchRef.current = onlineLaunch;
 
   const UI_DT = 1 / UI_SNAPSHOT_HZ;
 
@@ -108,19 +127,46 @@ export default function GameApp({ user, launchMode, onLogout, onExitToWelcome }:
     rafRef.current = requestAnimationFrame(loop);
   }, [stopLoop, pushUiSnapshot, UI_DT]);
 
+  const handleJoinResponse = useCallback(
+    (socket: Socket, res: JoinResponse) => {
+      if (!res.ok) {
+        setOnlineError(res.error ?? 'Could not join');
+        socket.disconnect();
+        setScreen('menu');
+        return;
+      }
+      setPlayerId(res.playerId!);
+      setPlayerSlot(res.slot!);
+      setRoomCode(res.code!);
+      if (res.lobby) setOnlineLobby(res.lobby);
+      const humans = res.lobby?.players.filter((p) => !p.isAI).length ?? 1;
+      const codeLabel = res.code ? ` · ${res.code}` : '';
+      setOnlineStatus(`${humans}/${res.lobby?.maxPlayers ?? 5} players${codeLabel}`);
+      setScreen('game');
+    },
+    []
+  );
+
   const startGame = useCallback(
-    (gameMode: GameMode, name: string) => {
+    (gameMode: GameMode, name: string, online?: OnlineLaunchOptions) => {
       setMode(gameMode);
       setOnlineError('');
 
       if (gameMode === 'online') {
+        const join = online ?? onlineLaunchRef.current;
+        if (join.joinMode === 'join' && !join.code?.trim()) {
+          setOnlineError('Enter a room code');
+          setScreen('menu');
+          return;
+        }
+
         const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
         socketRef.current = socket;
 
         socket.on('lobby-update', (lobby: OnlineLobbySnapshot) => {
           setOnlineLobby(lobby);
           const humans = lobby.players.filter((p) => !p.isAI).length;
-          setOnlineStatus(`${humans}/${lobby.maxPlayers} players`);
+          setOnlineStatus(`${humans}/${lobby.maxPlayers} players · ${lobby.code}`);
         });
 
         let onlineUiAccum = 0;
@@ -145,28 +191,16 @@ export default function GameApp({ user, launchMode, onLogout, onExitToWelcome }:
         });
 
         const token = loadSession()?.token;
-        socket.emit('quick-join', { name, token }, (res: {
-          ok: boolean;
-          code?: string;
-          playerId?: string;
-          slot?: number;
-          lobby?: OnlineLobbySnapshot;
-          error?: string;
-        }) => {
-          if (!res.ok) {
-            setOnlineError(res.error ?? 'Could not join');
-            socket.disconnect();
-            setScreen('menu');
-            return;
-          }
-          setPlayerId(res.playerId!);
-          setPlayerSlot(res.slot!);
-          setRoomCode(res.code!);
-          if (res.lobby) setOnlineLobby(res.lobby);
-          const humans = res.lobby?.players.filter((p) => !p.isAI).length ?? 1;
-          setOnlineStatus(`${humans}/${res.lobby?.maxPlayers ?? 5} players`);
-          setScreen('game');
-        });
+        const payload = { name, token };
+        const onRes = (res: JoinResponse) => handleJoinResponse(socket, res);
+
+        if (join.joinMode === 'create') {
+          socket.emit('create-room', payload, onRes);
+        } else if (join.joinMode === 'join') {
+          socket.emit('join-room', { ...payload, code: join.code!.trim() }, onRes);
+        } else {
+          socket.emit('quick-join', payload, onRes);
+        }
 
         return;
       }
@@ -188,7 +222,7 @@ export default function GameApp({ user, launchMode, onLogout, onExitToWelcome }:
       setScreen('game');
       startLocalLoop();
     },
-    [startLocalLoop]
+    [startLocalLoop, handleJoinResponse]
   );
 
   const sendInput = useCallback(
@@ -251,8 +285,8 @@ export default function GameApp({ user, launchMode, onLogout, onExitToWelcome }:
   useEffect(() => {
     if (autoStartedRef.current) return;
     autoStartedRef.current = true;
-    startGame(launchMode, user.displayName);
-  }, [launchMode, user.displayName, startGame]);
+    startGame(launchMode, user.displayName, launchMode === 'online' ? onlineLaunch : undefined);
+  }, [launchMode, onlineLaunch, user.displayName, startGame]);
 
   const cleanupMatch = useCallback(() => {
     stopLoop();
@@ -301,9 +335,9 @@ export default function GameApp({ user, launchMode, onLogout, onExitToWelcome }:
         <GameModeMenu
           displayName={user.displayName}
           username={user.username}
-          onStart={(gameMode) => {
+          onStart={(gameMode, online) => {
             setOnlineError('');
-            startGame(gameMode, user.displayName);
+            startGame(gameMode, user.displayName, online);
           }}
           onLogout={onLogout}
         />
@@ -327,7 +361,7 @@ export default function GameApp({ user, launchMode, onLogout, onExitToWelcome }:
 
       <main className="play-area">
         {waitingOnline ? (
-          <OnlineWaiting lobby={onlineLobby} />
+          <OnlineWaiting lobby={onlineLobby} roomCode={roomCode} />
         ) : (
           <div
             className={`game-stage${controlsEnabled ? ' swipe-input' : ''}`}

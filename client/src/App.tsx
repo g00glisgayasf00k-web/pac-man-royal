@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { GameMode } from '../../shared/gameTypes';
+import { GameMode, OnlineLaunchOptions } from '../../shared/gameTypes';
 import { fetchMe, logout } from './auth/api';
 import {
   clearSession,
@@ -26,9 +26,12 @@ export default function App() {
   const [phase, setPhase] = useState<Phase>('welcome');
   const [session, setSession] = useState<AuthSession | null>(null);
   const [launchMode, setLaunchMode] = useState<GameMode>('local');
+  const [onlineLaunch, setOnlineLaunch] = useState<OnlineLaunchOptions>({ joinMode: 'quick' });
 
-  const enterGame = useCallback((s: AuthSession, mode: GameMode) => {
+  const enterGame = useCallback((s: AuthSession, mode: GameMode, online?: OnlineLaunchOptions) => {
     setLaunchMode(mode);
+    if (online) setOnlineLaunch(online);
+    else if (mode === 'local') setOnlineLaunch({ joinMode: 'quick' });
     if (hasCompletedOnboarding(s.user.id)) {
       setPhase('game');
     } else {
@@ -37,8 +40,9 @@ export default function App() {
   }, []);
 
   const continueToGame = useCallback(
-    async (mode: GameMode) => {
+    async (mode: GameMode, online?: OnlineLaunchOptions) => {
       setLaunchMode(mode);
+      if (online) setOnlineLaunch(online);
       setPhase('boot');
       const saved = loadSession();
       if (!saved?.token) {
@@ -50,7 +54,7 @@ export default function App() {
         const next = { token: saved.token, user };
         saveSession(next);
         setSession(next);
-        enterGame(next, mode);
+        enterGame(next, mode, online);
       } catch {
         clearSession();
         setPhase('auth');
@@ -114,6 +118,7 @@ export default function App() {
       <GameApp
         user={session.user}
         launchMode={launchMode}
+        onlineLaunch={onlineLaunch}
         onLogout={handleLogout}
         onExitToWelcome={handleExitToWelcome}
       />

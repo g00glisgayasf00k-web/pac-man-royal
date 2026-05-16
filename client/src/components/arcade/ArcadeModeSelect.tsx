@@ -25,12 +25,6 @@ export function ArcadeModeSelect({ tab, onTabChange }: Props) {
           ONLINE
         </button>
       </div>
-      {tab === 'online' && (
-        <p className="arcade-mode-hint">
-          Join matches with other players. Game starts at 5 players or after a short countdown
-          with 2+.
-        </p>
-      )}
     </div>
   );
 }

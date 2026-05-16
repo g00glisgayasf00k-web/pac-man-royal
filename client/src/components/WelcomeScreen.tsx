@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { GameMode, WIN_SCORE } from '../../../shared/gameTypes';
+import { GameMode, OnlineJoinMode, OnlineLaunchOptions, WIN_SCORE } from '../../../shared/gameTypes';
 import {
   ArcadeFooter,
   ArcadeGate,
@@ -8,11 +8,13 @@ import {
   ArcadeRuleCards,
 } from './arcade/ArcadeLayout';
 import { ArcadeModeSelect, tabToGameMode } from './arcade/ArcadeModeSelect';
+import { OnlineJoinSelect } from './arcade/OnlineJoinSelect';
 import { DualLeaderboards } from './arcade/OverallLeaderboard';
+import { clearRoomFromUrl, readRoomCodeFromUrl } from '../utils/roomInvite';
 import './welcome/welcome.css';
 
 type Props = {
-  onPlay: (mode: GameMode) => void;
+  onPlay: (mode: GameMode, online?: OnlineLaunchOptions) => void;
 };
 
 const LOAD_MS = 2800;
@@ -21,6 +23,18 @@ export function WelcomeScreen({ onPlay }: Props) {
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState<'solo' | 'online'>('solo');
+  const [onlineJoinMode, setOnlineJoinMode] = useState<OnlineJoinMode>('quick');
+  const [joinCode, setJoinCode] = useState('');
+
+  useEffect(() => {
+    const fromUrl = readRoomCodeFromUrl();
+    if (fromUrl) {
+      setTab('online');
+      setOnlineJoinMode('join');
+      setJoinCode(fromUrl);
+      clearRoomFromUrl();
+    }
+  }, []);
 
   useEffect(() => {
     const start = performance.now();
@@ -40,8 +54,14 @@ export function WelcomeScreen({ onPlay }: Props) {
 
   const launch = useCallback(() => {
     if (!ready) return;
-    onPlay(tabToGameMode(tab));
-  }, [ready, onPlay, tab]);
+    const mode = tabToGameMode(tab);
+    if (mode === 'online') {
+      if (onlineJoinMode === 'join' && joinCode.trim().length < 4) return;
+      onPlay(mode, { joinMode: onlineJoinMode, code: joinCode.trim() || undefined });
+      return;
+    }
+    onPlay(mode);
+  }, [ready, onPlay, tab, onlineJoinMode, joinCode]);
 
   useEffect(() => {
     if (!ready) return;
@@ -76,13 +96,36 @@ export function WelcomeScreen({ onPlay }: Props) {
 
       <ArcadeModeSelect tab={tab} onTabChange={setTab} />
 
+      {tab === 'online' && (
+        <OnlineJoinSelect
+          joinMode={onlineJoinMode}
+          joinCode={joinCode}
+          onJoinModeChange={setOnlineJoinMode}
+          onJoinCodeChange={setJoinCode}
+        />
+      )}
+
       <p className={`insert ${ready ? 'blink' : ''}`}>
         {ready ? '— PRESS START —' : `LOADING… ${progress}%`}
       </p>
 
       <div className="btn-row">
-        <button type="button" className="btn-play" disabled={!ready} onClick={launch}>
-          ▶ {tab === 'solo' ? 'START GAME' : 'JOIN ONLINE'}
+        <button
+          type="button"
+          className="btn-play"
+          disabled={
+            !ready || (tab === 'online' && onlineJoinMode === 'join' && joinCode.trim().length < 4)
+          }
+          onClick={launch}
+        >
+          ▶{' '}
+          {tab === 'solo'
+            ? 'START GAME'
+            : onlineJoinMode === 'create'
+              ? 'CREATE ROOM'
+              : onlineJoinMode === 'join'
+                ? 'JOIN ROOM'
+                : 'QUICK MATCH'}
         </button>
       </div>
 

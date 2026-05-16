@@ -35,6 +35,8 @@ export class GameRoom {
   engine: InstanceType<typeof GameEngine> | null = null;
   interval: ReturnType<typeof setInterval> | null = null;
   status: 'lobby' | 'playing' | 'ended' = 'lobby';
+  /** Invite-only — excluded from quick-match pool */
+  private = false;
   autoStartAt: number | null = null;
   private autoStartTimer: ReturnType<typeof setTimeout> | null = null;
   private resultsRecorded = false;
@@ -44,10 +46,12 @@ export class GameRoom {
     hostId: string,
     hostName: string,
     hostSocket: Socket,
-    account?: { id: string; username: string; displayName: string } | null
+    account?: { id: string; username: string; displayName: string } | null,
+    isPrivate = false
   ) {
     this.code = code;
     this.hostId = hostId;
+    this.private = isPrivate;
     this.addPlayer(hostId, hostName, hostSocket, 0, account);
   }
 
@@ -70,6 +74,11 @@ export class GameRoom {
       isAI: !socket,
       socketId: socket?.id ?? null,
     };
+    if (account) {
+      player.userId = account.id;
+      player.username = account.username;
+      player.displayName = account.displayName;
+    }
     this.players.set(socketId, player);
     return player;
   }
@@ -212,6 +221,7 @@ export function findOrCreateMatchmakingRoom(
   let bestSize = 0;
 
   for (const room of rooms.values()) {
+    if (room.private) continue;
     if (room.status !== 'lobby') continue;
     if (room.players.size >= MAX_PLAYERS) continue;
     if (room.humanCount() === 0) continue;
@@ -223,7 +233,7 @@ export function findOrCreateMatchmakingRoom(
 
   if (!best) {
     const code = randomRoomCode();
-    const room = new GameRoom(code, socket.id, name || 'Player', socket, account);
+    const room = new GameRoom(code, socket.id, name || 'Player', socket, account, false);
     rooms.set(code, room);
     return { room, player: room.players.get(socket.id)! };
   }
@@ -231,6 +241,66 @@ export function findOrCreateMatchmakingRoom(
   const added = best.addPlayer(socket.id, name || 'Player', socket, undefined, account);
   if (!added) return { error: 'Could not join lobby' };
   return { room: best, player: added };
+}
+
+export function createPrivateRoom(
+  rooms: Map<string, GameRoom>,
+  socket: Socket,
+  name: string,
+  account?: { id: string; username: string; displayName: string } | null
+): { room: GameRoom; player: RoomPlayer } {
+  let code = randomRoomCode();
+  while (rooms.has(code)) code = randomRoomCode();
+  const room = new GameRoom(code, socket.id, name || 'Player', socket, account, true);
+  rooms.set(code, room);
+  return { room, player: room.players.get(socket.id)! };
+}
+
+export function joinRoomByCode(
+  rooms: Map<string, GameRoom>,
+  socket: Socket,
+  rawCode: string,
+  name: string,
+  account?: { id: string; username: string; displayName: string } | null
+): { room: GameRoom; player: RoomPlayer } | { error: string } {
+  const code = rawCode.trim().toUpperCase();
+  if (!code) return { error: 'Enter a room code' };
+  const room = rooms.get(code);
+  if (!room) return { error: 'Room not found' };
+  if (room.status !== 'lobby') return { error: 'That game has already started' };
+  if (room.players.size >= MAX_PLAYERS) return { error: 'Room is full' };
+  const added = room.addPlayer(socket.id, name || 'Player', socket, undefined, account);
+  if (!added) return { error: 'Could not join room' };
+  return { room, player: added };
+}
+
+type JoinCallback = (res: {
+  ok: boolean;
+  code?: string;
+  playerId?: string;
+  slot?: number;
+  lobby?: OnlineLobbySnapshot;
+  error?: string;
+}) => void;
+
+function finishJoin(
+  io: Server,
+  socket: Socket,
+  room: GameRoom,
+  player: RoomPlayer,
+  cb: JoinCallback
+) {
+  socket.join(room.code);
+  room.tryAutoStart(io);
+  io.to(room.code).emit('lobby-update', getLobbyState(room));
+  const lobby = getLobbyState(room);
+  cb({
+    ok: true,
+    code: room.code,
+    playerId: socket.id,
+    slot: player.slot,
+    lobby,
+  });
 }
 
 export function attachRoomHandlers(io: Server, rooms: Map<string, GameRoom>) {
@@ -241,20 +311,29 @@ export function attachRoomHandlers(io: Server, rooms: Map<string, GameRoom>) {
       if ('error' in result) {
         return cb({ ok: false, error: result.error });
       }
-
-      const { room, player } = result;
-      socket.join(room.code);
-      room.tryAutoStart(io);
-      io.to(room.code).emit('lobby-update', getLobbyState(room));
-      const lobby = getLobbyState(room);
-      cb({
-        ok: true,
-        code: room.code,
-        playerId: socket.id,
-        slot: player.slot,
-        lobby,
-      });
+      finishJoin(io, socket, result.room, result.player, cb);
     });
+
+    socket.on('create-room', async ({ name, token }: { name: string; token?: string }, cb) => {
+      const account = await getUserByToken(token);
+      const { room, player } = createPrivateRoom(rooms, socket, name, account);
+      finishJoin(io, socket, room, player, cb);
+    });
+
+    socket.on(
+      'join-room',
+      async (
+        { name, token, code }: { name: string; token?: string; code: string },
+        cb: JoinCallback
+      ) => {
+        const account = await getUserByToken(token);
+        const result = joinRoomByCode(rooms, socket, code, name, account);
+        if ('error' in result) {
+          return cb({ ok: false, error: result.error });
+        }
+        finishJoin(io, socket, result.room, result.player, cb);
+      }
+    );
 
     socket.on('input', (payload: InputPayload & { code: string }) => {
       const room = rooms.get(payload.code);
@@ -317,5 +396,6 @@ function getLobbyState(room: GameRoom): OnlineLobbySnapshot {
     status: room.status,
     maxPlayers: MAX_PLAYERS,
     autoStartAt: room.autoStartAt,
+    private: room.private,
   };
 }

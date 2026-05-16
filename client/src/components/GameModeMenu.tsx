@@ -1,21 +1,30 @@
 import { useState } from 'react';
-import { GameMode } from '../../../shared/gameTypes';
+import { GameMode, OnlineJoinMode, OnlineLaunchOptions } from '../../../shared/gameTypes';
 import { ArcadeFooter, ArcadeGate, ArcadeHeader } from './arcade/ArcadeLayout';
 import { ArcadeModeSelect, tabToGameMode } from './arcade/ArcadeModeSelect';
+import { OnlineJoinSelect } from './arcade/OnlineJoinSelect';
 import './lobby/lobby.css';
 
 interface Props {
   displayName: string;
   username: string;
-  onStart: (mode: GameMode) => void;
+  onStart: (mode: GameMode, online?: OnlineLaunchOptions) => void;
   onLogout: () => void;
 }
 
 export function GameModeMenu({ displayName, username, onStart, onLogout }: Props) {
   const [tab, setTab] = useState<'solo' | 'online'>('solo');
+  const [onlineJoinMode, setOnlineJoinMode] = useState<OnlineJoinMode>('quick');
+  const [joinCode, setJoinCode] = useState('');
 
   const launch = () => {
-    onStart(tabToGameMode(tab));
+    const mode = tabToGameMode(tab);
+    if (mode === 'online') {
+      if (onlineJoinMode === 'join' && joinCode.trim().length < 4) return;
+      onStart(mode, { joinMode: onlineJoinMode, code: joinCode.trim() || undefined });
+      return;
+    }
+    onStart(mode);
   };
 
   return (
@@ -30,11 +39,32 @@ export function GameModeMenu({ displayName, username, onStart, onLogout }: Props
       <ArcadeHeader />
       <ArcadeModeSelect tab={tab} onTabChange={setTab} />
 
+      {tab === 'online' && (
+        <OnlineJoinSelect
+          joinMode={onlineJoinMode}
+          joinCode={joinCode}
+          onJoinModeChange={setOnlineJoinMode}
+          onJoinCodeChange={setJoinCode}
+        />
+      )}
+
       <p className="insert blink">— PRESS START —</p>
 
       <div className="btn-row lobby-start-row">
-        <button type="button" className="btn-play" onClick={launch}>
-          ▶ {tab === 'solo' ? 'START GAME' : 'JOIN GAME'}
+        <button
+          type="button"
+          className="btn-play"
+          disabled={tab === 'online' && onlineJoinMode === 'join' && joinCode.trim().length < 4}
+          onClick={launch}
+        >
+          ▶{' '}
+          {tab === 'solo'
+            ? 'START GAME'
+            : onlineJoinMode === 'create'
+              ? 'CREATE ROOM'
+              : onlineJoinMode === 'join'
+                ? 'JOIN ROOM'
+                : 'QUICK MATCH'}
         </button>
       </div>
 

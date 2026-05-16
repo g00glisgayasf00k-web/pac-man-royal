@@ -129,6 +129,52 @@
   margin-bottom: 0;
 }
 
+.arcade-gate .online-join-select {
+  margin-bottom: 12px;
+}
+
+.arcade-gate .online-join-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.arcade-gate .online-join-tabs button {
+  flex: 1;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  padding: 10px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  color: #888;
+  border: 1px solid #444;
+}
+
+.arcade-gate .online-join-tabs button.active {
+  background: #2121de;
+  color: #fff;
+  border-color: #2121de;
+}
+
+.arcade-gate .online-join-code-row {
+  margin-top: 10px;
+}
+
+.arcade-gate .online-join-code-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  letter-spacing: 4px;
+  text-align: center;
+  padding: 12px;
+  background: #0a0a2a;
+  border: 2px solid #2121de;
+  border-radius: 6px;
+  color: #ffe000;
+}
+
 .arcade-gate .how-to-play {
   margin-bottom: 18px;
 }

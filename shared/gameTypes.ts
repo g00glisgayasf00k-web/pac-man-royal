@@ -29,6 +29,15 @@ export const GHOST_HEAD_START_MS = 2000;
 
 export type Direction = 'up' | 'down' | 'left' | 'right' | 'none';
 export type GameMode = 'local' | 'online';
+
+/** How to enter an online match from the welcome screen */
+export type OnlineJoinMode = 'quick' | 'create' | 'join';
+
+export interface OnlineLaunchOptions {
+  joinMode: OnlineJoinMode;
+  /** Required when joinMode is 'join' */
+  code?: string;
+}
 export type Role = 'pacman' | 'ghost';
 
 export const PLAYER_SLOT_COLORS = [
@@ -93,6 +102,8 @@ export interface OnlineLobbySnapshot {
   status: 'lobby' | 'playing' | 'ended';
   maxPlayers: number;
   autoStartAt: number | null;
+  /** Invite-only room (not listed in quick match) */
+  private?: boolean;
 }
 
 export const PLAYER_COLORS = ['#FFD700', '#FF4444', '#FF69B4', '#00FFFF', '#FF8C00'];
