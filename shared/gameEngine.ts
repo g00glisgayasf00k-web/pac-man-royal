@@ -34,7 +34,6 @@ import {
   type ActorTile,
 } from './ai';
 import {
-  findSpawnPoints,
   getBattleStartPosition,
   isTunnelRow,
   isWalkable,
@@ -159,7 +158,7 @@ export class GameEngine {
   setInput(playerId: string, direction: Direction) {
     const p = this.players.find((pl) => pl.id === playerId);
     if (!p || this.status === 'ended' || direction === 'none') return;
-    if (p.role === 'ghost' && Date.now() < this.ghostsReleasedAt) return;
+    if (Date.now() < this.ghostsReleasedAt) return;
     p.nextDir = direction;
     // Only commit direction when centered in the lane (or starting from standstill)
     if (p.dir === 'none' && this.isAtIntersectionCenter(p) && this.canTurn(p, direction)) {
@@ -182,7 +181,7 @@ export class GameEngine {
 
     for (const p of this.players) {
       if (p.respawnUntil > now) continue;
-      if (p.role === 'ghost' && now < this.ghostsReleasedAt) continue;
+      if (now < this.ghostsReleasedAt) continue;
       this.movePlayer(p, dt, now);
       if (p.role === 'pacman' && p.id === this.pacmanId) {
         this.eatPellets(p, now);
@@ -305,6 +304,7 @@ export class GameEngine {
 
     for (const p of this.players) {
       if (!p.isAI || p.respawnUntil > now) continue;
+      if (now < this.ghostsReleasedAt) continue;
 
       if (p.role === 'pacman' && p.id === this.pacmanId) {
         const d = choosePacmanDirection(
@@ -484,11 +484,9 @@ export class GameEngine {
     oldPac.captureCooldownUntil = now + CAPTURE_COOLDOWN_MS;
     newPac.captureCooldownUntil = now + CAPTURE_COOLDOWN_MS;
     oldPac.respawnUntil = now + RESPAWN_MS;
-    const spawns = findSpawnPoints();
-    const sp = spawns[oldPac.slot % spawns.length];
-    const c = tileCenter(sp.col, sp.row);
-    oldPac.x = c.x;
-    oldPac.y = c.y;
+    const pen = getBattleStartPosition(oldPac.slot);
+    oldPac.x = pen.x;
+    oldPac.y = pen.y;
   }
 
   private checkWin() {
