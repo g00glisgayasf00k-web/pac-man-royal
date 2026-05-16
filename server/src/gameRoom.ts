@@ -2,7 +2,9 @@ import { Server, Socket } from 'socket.io';
 import {
   FIXED_DT,
   MAX_SIM_STEPS_PER_FRAME,
+  MOVE_SPEED,
   NETWORK_SNAPSHOT_HZ,
+  ONLINE_SPEED_MULTIPLIER,
   ghostNameForSlot,
   type GameSnapshot,
   type InputPayload,
@@ -126,7 +128,9 @@ export class GameRoom {
     const configs = [...this.players.values()]
       .sort((a, b) => a.slot - b.slot)
       .map((p) => ({ id: p.id, name: p.name, slot: p.slot, isAI: p.isAI }));
-    this.engine = new GameEngine(configs);
+    this.engine = new GameEngine(configs, {
+      moveSpeed: MOVE_SPEED * ONLINE_SPEED_MULTIPLIER,
+    });
     this.status = 'playing';
     this.resultsRecorded = false;
 
