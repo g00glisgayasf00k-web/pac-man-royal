@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Server } from 'socket.io';
+import { createAdminRouter } from './adminRoutes.js';
 import { authRouter } from './authRoutes.js';
 import { leaderboardRouter } from './leaderboardRoutes.js';
 import { attachRoomHandlers, GameRoom } from './gameRoom.js';
@@ -23,6 +24,7 @@ attachRoomHandlers(io, rooms);
 
 app.use('/api/auth', authRouter);
 app.use('/api/leaderboard', leaderboardRouter);
+app.use('/api/admin', createAdminRouter(() => rooms.size));
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, userStore: useDatabase() ? 'postgres' : 'file' });

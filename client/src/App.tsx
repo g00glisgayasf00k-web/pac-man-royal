@@ -11,8 +11,14 @@ import {
 import type { AuthSession } from './auth/types';
 import { AuthScreen } from './components/AuthScreen';
 import { OnboardingScreen } from './components/OnboardingScreen';
+import { AdminScreen } from './components/AdminScreen';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import GameApp from './GameApp';
+
+function isAdminPath() {
+  const p = window.location.pathname.replace(/\/$/, '') || '/';
+  return p === '/admin';
+}
 
 type Phase = 'welcome' | 'auth' | 'onboarding' | 'game' | 'boot';
 
@@ -74,6 +80,10 @@ export default function App() {
   const handleExitToWelcome = () => {
     setPhase('welcome');
   };
+
+  if (isAdminPath()) {
+    return <AdminScreen />;
+  }
 
   if (phase === 'welcome') {
     return <WelcomeScreen onPlay={continueToGame} />;

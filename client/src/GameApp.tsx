@@ -281,10 +281,14 @@ export default function GameApp({ user, launchMode, onLogout, onExitToWelcome }:
     onExitToWelcome();
   }, [cleanupMatch, onExitToWelcome]);
 
-  const openMenu = () => {
+  const openMenu = useCallback(() => {
+    if (waitingOnline) {
+      exitToWelcome();
+      return;
+    }
     cleanupMatch();
     setScreen('menu');
-  };
+  }, [waitingOnline, exitToWelcome, cleanupMatch]);
 
   if (screen === 'menu') {
     return (

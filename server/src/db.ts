@@ -60,6 +60,20 @@ export async function initDb(): Promise<void> {
       ALTER TABLE leaderboard_stats ADD COLUMN IF NOT EXISTS mode TEXT NOT NULL DEFAULT 'local';
       ALTER TABLE leaderboard_stats DROP CONSTRAINT IF EXISTS leaderboard_stats_pkey;
       ALTER TABLE leaderboard_stats ADD PRIMARY KEY (user_id, mode);
+
+      CREATE TABLE IF NOT EXISTS game_results (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        username TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        mode TEXT NOT NULL,
+        score INT NOT NULL,
+        won BOOLEAN NOT NULL,
+        played_at BIGINT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS game_results_played_at_idx ON game_results(played_at DESC);
+      CREATE INDEX IF NOT EXISTS game_results_mode_idx ON game_results(mode);
     `);
   } finally {
     client.release();

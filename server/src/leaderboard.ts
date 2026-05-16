@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import type { LeaderboardEntry, LeaderboardMode } from '../../shared/leaderboardTypes.js';
 import { getUserByToken } from './auth.js';
 import { useDatabase, getPool } from './db.js';
+import { logGameResult } from './metrics.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, '../data');
@@ -154,6 +155,7 @@ export async function recordGameResultForUser(
          updated_at = EXCLUDED.updated_at`,
       [userId, gameMode, won ? 1 : 0, pts, now]
     );
+    await logGameResult(userId, username, displayName, pts, won, gameMode);
     return;
   }
 
@@ -171,4 +173,5 @@ export async function recordGameResultForUser(
     updatedAt: now,
   };
   await saveFileStore();
+  await logGameResult(userId, username, displayName, pts, won, gameMode);
 }
