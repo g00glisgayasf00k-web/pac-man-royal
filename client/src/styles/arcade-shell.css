@@ -82,11 +82,18 @@
   opacity: 0.6;
 }
 
+.arcade-gate .how-to-play {
+  margin-bottom: 18px;
+}
+
+.arcade-gate .how-to-play .section-label {
+  margin-bottom: 10px;
+}
+
 .arcade-gate .how-it-works {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-bottom: 18px;
 }
 
 .arcade-gate .rule-card {

@@ -34,44 +34,66 @@ export function ArcadeHeader() {
 
 export function ArcadeRuleCards() {
   return (
-    <div className="how-it-works">
-      <div className="rule-card">
-        <span className="rule-icon" aria-hidden>
-          🟡
-        </span>
-        <p className="rule-text">
-          <strong>BE PAC-MAN</strong>
-          Eat pellets &amp; power-ups to rack up points. Stay ahead — ghosts are hunting you.
-        </p>
+    <section className="how-to-play" aria-label="How to play">
+      <p className="section-label">— HOW TO PLAY —</p>
+      <div className="how-it-works">
+        <div className="rule-card">
+          <span className="rule-icon" aria-hidden>
+            🟡
+          </span>
+          <p className="rule-text">
+            <strong>BE PAC-MAN</strong>
+            Eat pellets to score. First to {WIN_SCORE.toLocaleString()} points wins the match.
+          </p>
+        </div>
+        <div className="rule-card">
+          <span className="rule-icon" aria-hidden>
+            👻
+          </span>
+          <p className="rule-text">
+            <strong>HUNT AS A GHOST</strong>
+            Chase Pac-Man. Tag them and you become Pac-Man — steal the lead.
+          </p>
+        </div>
+        <div className="rule-card">
+          <span className="rule-icon" aria-hidden>
+            ⚡
+          </span>
+          <p className="rule-text">
+            <strong>POWER PELLETS</strong>
+            Anyone can collect for points. Pac-Man gets 1.5× speed. Respawn every 30s.
+          </p>
+        </div>
+        <div className="rule-card">
+          <span className="rule-icon" aria-hidden>
+            🍒
+          </span>
+          <p className="rule-text">
+            <strong>BONUS FRUITS</strong>
+            One random fruit on the map. Only Pac-Man can collect: Cherry 25, Orange 50, Apple
+            75, Lemon 100 pts.
+          </p>
+        </div>
+        <div className="rule-card">
+          <span className="rule-icon" aria-hidden>
+            🌀
+          </span>
+          <p className="rule-text">
+            <strong>SIDE TUNNELS</strong>
+            Use the left and right exits in the middle corridor to warp across the maze.
+          </p>
+        </div>
+        <div className="rule-card">
+          <span className="rule-icon" aria-hidden>
+            🎮
+          </span>
+          <p className="rule-text">
+            <strong>CONTROLS</strong>
+            Desktop: arrow keys. Mobile: swipe on the maze to move.
+          </p>
+        </div>
       </div>
-      <div className="rule-card">
-        <span className="rule-icon" aria-hidden>
-          👻
-        </span>
-        <p className="rule-text">
-          <strong>HUNT AS A GHOST</strong>
-          Chase down Pac-Man. Tag them and YOU become Pac-Man — stealing the lead.
-        </p>
-      </div>
-      <div className="rule-card">
-        <span className="rule-icon" aria-hidden>
-          🔄
-        </span>
-        <p className="rule-text">
-          <strong>TAG MECHANIC</strong>
-          When a ghost catches Pac-Man, roles swap instantly. The ex-Pac-Man becomes a ghost.
-        </p>
-      </div>
-      <div className="rule-card">
-        <span className="rule-icon" aria-hidden>
-          ⚡
-        </span>
-        <p className="rule-text">
-          <strong>POWER PELLETS</strong>
-          Anyone can grab them for points. Pac-Man gets 1.5× speed. Respawn every 30s.
-        </p>
-      </div>
-    </div>
+    </section>
   );
 }
 

@@ -180,32 +180,6 @@ body.game-locked #root {
   backdrop-filter: blur(8px);
 }
 
-.scoreboard-status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.5rem;
-  width: 100%;
-}
-
-.scoreboard .status-line {
-  font-size: 0.7rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.scoreboard .status-line.boost {
-  color: #fde68a;
-}
-
-.scoreboard .status-line.fruit {
-  color: #ffb8ae;
-}
-
-.scoreboard .status-line.head-start {
-  color: #7dd3fc;
-}
-
 .scoreboard-track {
   list-style: none;
   display: flex;
@@ -447,15 +421,7 @@ body.game-locked #root {
     gap: 0.35rem 0.5rem;
   }
 
-  .scoreboard-status {
-    order: 2;
-    width: auto;
-    flex: 1;
-    justify-content: flex-end;
-  }
-
   .scoreboard-track {
-    order: 1;
     width: 100%;
     gap: 0.25rem;
   }
@@ -475,7 +441,6 @@ body.game-locked #root {
   }
 
   .scoreboard-goal {
-    order: 3;
     font-size: 0.6rem;
   }
 }
