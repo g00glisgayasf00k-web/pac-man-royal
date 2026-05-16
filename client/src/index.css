@@ -587,7 +587,10 @@ body.game-locked #root {
 
   .game-stage {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: calc(11.25rem + env(safe-area-inset-bottom, 0.75rem));
   }
 
   .game-canvas {

@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function Scoreboard({ snapshot, highlightId }: Props) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   if (!snapshot) return null;
   const sorted = [...snapshot.players].sort((a, b) => b.score - a.score);
