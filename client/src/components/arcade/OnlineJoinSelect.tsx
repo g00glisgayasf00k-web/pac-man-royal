@@ -41,8 +41,7 @@ export function OnlineJoinSelect({
       </div>
       {joinMode === 'quick' && (
         <p className="arcade-mode-hint">
-          Auto-join a random public lobby. Match starts at 5 players or after a short countdown with
-          2+.
+          Auto-join a random public lobby. The match starts when all 5 player slots are filled.
         </p>
       )}
       {joinMode === 'create' && (

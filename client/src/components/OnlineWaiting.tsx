@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { OnlineLobbySnapshot } from '../../../shared/gameTypes';
 import { buildRoomInviteLink } from '../utils/roomInvite';
 
@@ -8,19 +8,11 @@ interface Props {
 }
 
 export function OnlineWaiting({ lobby, roomCode }: Props) {
-  const [, setTick] = useState(0);
   const [copied, setCopied] = useState(false);
   const humans = lobby.players.filter((p) => !p.isAI);
-  const now = Date.now();
-  const secs =
-    lobby.autoStartAt != null ? Math.max(0, Math.ceil((lobby.autoStartAt - now) / 1000)) : null;
   const code = roomCode || lobby.code;
+  const slotsLeft = lobby.maxPlayers - humans.length;
   const isPrivate = lobby.private ?? false;
-
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 500);
-    return () => clearInterval(id);
-  }, []);
 
   const inviteLink = buildRoomInviteLink(code);
 
@@ -57,12 +49,13 @@ export function OnlineWaiting({ lobby, roomCode }: Props) {
       <p className="waiting-count">
         {humans.length} / {lobby.maxPlayers} players in lobby
       </p>
-      {humans.length < 2 && (
-        <p className="waiting-hint">Waiting for more players to join…</p>
+      {slotsLeft > 0 && (
+        <p className="waiting-hint">
+          Waiting for {slotsLeft} more player{slotsLeft === 1 ? '' : 's'} — game starts when the
+          lobby is full ({lobby.maxPlayers}/{lobby.maxPlayers}).
+        </p>
       )}
-      {secs != null && humans.length >= 2 && (
-        <p className="waiting-hint">Match starts in {secs}s (empty slots filled with bots)</p>
-      )}
+      {slotsLeft === 0 && <p className="waiting-hint">Lobby full — starting match…</p>}
       <ul className="waiting-players">
         {humans.map((p) => (
           <li key={p.id}>

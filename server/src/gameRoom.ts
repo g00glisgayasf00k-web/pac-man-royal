@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import {
   FIXED_DT,
   MAX_SIM_STEPS_PER_FRAME,
+  NETWORK_SNAPSHOT_HZ,
   ghostNameForSlot,
   type GameSnapshot,
   type InputPayload,
@@ -14,8 +15,7 @@ import { getUserByToken } from './auth.js';
 const { GameEngine } = Engine;
 
 const MAX_PLAYERS = 5;
-const MIN_PLAYERS_TO_START = 2;
-const AUTO_START_COUNTDOWN_MS = 12_000;
+const BROADCAST_INTERVAL_MS = 1000 / NETWORK_SNAPSHOT_HZ;
 
 export interface RoomPlayer {
   id: string;
@@ -40,6 +40,7 @@ export class GameRoom {
   autoStartAt: number | null = null;
   private autoStartTimer: ReturnType<typeof setTimeout> | null = null;
   private resultsRecorded = false;
+  lastBroadcastAt = 0;
 
   constructor(
     code: string,
@@ -109,34 +110,12 @@ export class GameRoom {
     this.autoStartAt = null;
   }
 
-  scheduleAutoStart(io: Server) {
-    if (this.autoStartTimer || this.status !== 'lobby') return;
-    if (this.humanCount() < MIN_PLAYERS_TO_START) return;
-
-    this.autoStartAt = Date.now() + AUTO_START_COUNTDOWN_MS;
-    this.autoStartTimer = setTimeout(() => {
-      this.autoStartTimer = null;
-      this.autoStartAt = null;
-      if (this.status === 'lobby' && this.humanCount() >= MIN_PLAYERS_TO_START) {
-        this.start(io);
-      }
-    }, AUTO_START_COUNTDOWN_MS);
-
-    io.to(this.code).emit('lobby-update', getLobbyState(this));
-  }
-
   tryAutoStart(io: Server) {
     if (this.status !== 'lobby') return;
+    if (this.players.size < MAX_PLAYERS) return;
 
-    if (this.players.size >= MAX_PLAYERS) {
-      this.cancelAutoStart();
-      this.start(io);
-      return;
-    }
-
-    if (this.humanCount() >= MIN_PLAYERS_TO_START && !this.autoStartTimer) {
-      this.scheduleAutoStart(io);
-    }
+    this.cancelAutoStart();
+    this.start(io);
   }
 
   start(io?: Server) {
@@ -376,12 +355,15 @@ export function attachRoomHandlers(io: Server, rooms: Map<string, GameRoom>) {
       steps++;
     }
 
+    const broadcastNow = Date.now();
     for (const [code, room] of rooms) {
       if (room.status !== 'playing' || !room.engine) continue;
+      if (broadcastNow - room.lastBroadcastAt < BROADCAST_INTERVAL_MS) continue;
+      room.lastBroadcastAt = broadcastNow;
       const snap = room.getSnapshot();
       if (snap) io.to(code).emit('game-state', snap);
     }
-  }, 8);
+  }, 16);
 }
 
 function getLobbyState(room: GameRoom): OnlineLobbySnapshot {

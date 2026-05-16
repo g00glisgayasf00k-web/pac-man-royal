@@ -61,8 +61,7 @@ export function Lobby({ displayName, username, onStart, onLogout }: Props) {
         </div>
         {tab === 'online' && (
           <p className="lobby-hint">
-            Join matches with other players. Game starts at 5 players or after a short countdown
-            with 2+.
+            Join matches with other players. The game starts when all 5 player slots are full.
           </p>
         )}
       </div>

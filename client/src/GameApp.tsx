@@ -160,7 +160,9 @@ export default function GameApp({
           return;
         }
 
-        const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
+        const socket = io(SERVER_URL, {
+          transports: import.meta.env.PROD ? ['websocket'] : ['websocket', 'polling'],
+        });
         socketRef.current = socket;
 
         socket.on('lobby-update', (lobby: OnlineLobbySnapshot) => {
@@ -187,7 +189,10 @@ export default function GameApp({
             setSnapshot(snap);
           }
 
-          if (snap.status === 'ended') setScreen('win');
+          if (snap.status === 'ended') {
+            setScreen('win');
+            setSnapshot(snap);
+          }
         });
 
         const token = loadSession()?.token;
@@ -367,7 +372,11 @@ export default function GameApp({
             className={`game-stage${controlsEnabled ? ' swipe-input' : ''}`}
             {...swipeHandlers}
           >
-            <GameCanvas snapshot={snapshot} liveSnapshotRef={liveSnapshotRef} />
+            <GameCanvas
+              snapshot={snapshot}
+              liveSnapshotRef={liveSnapshotRef}
+              interpolateOnline={mode === 'online'}
+            />
           </div>
         )}
       </main>
