@@ -5,6 +5,8 @@ const PELLET_COLOR = '#ffb8ae';
 
 let mazeBg: HTMLImageElement | null = null;
 let bgLoadStarted = false;
+let cherrySprite: HTMLImageElement | null = null;
+let cherryLoadStarted = false;
 
 function getMazeBackground(): HTMLImageElement | null {
   if (mazeBg?.complete) return mazeBg;
@@ -14,6 +16,16 @@ function getMazeBackground(): HTMLImageElement | null {
     mazeBg.src = '/maze-bg.png';
   }
   return mazeBg?.complete ? mazeBg : null;
+}
+
+function getCherrySprite(): HTMLImageElement | null {
+  if (cherrySprite?.complete) return cherrySprite;
+  if (!cherryLoadStarted) {
+    cherryLoadStarted = true;
+    cherrySprite = new Image();
+    cherrySprite.src = '/cherry.svg';
+  }
+  return cherrySprite?.complete ? cherrySprite : null;
 }
 
 export function renderGame(ctx: CanvasRenderingContext2D, snap: GameSnapshot, width: number, height: number) {
@@ -71,40 +83,44 @@ function drawCherry(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
   const cx = snap.fruit.col * ts + ts / 2;
   const cy = snap.fruit.row * ts + ts / 2;
   const pulse = 1 + Math.sin(snap.tick / 6) * 0.06;
+  const size = ts * 1.35 * pulse;
 
+  const sprite = getCherrySprite();
+  if (sprite) {
+    ctx.drawImage(sprite, cx - size / 2, cy - size / 2, size, size);
+    return;
+  }
+
+  drawCherryFallback(ctx, cx, cy, pulse);
+}
+
+function drawCherryFallback(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  pulse: number
+) {
   ctx.save();
   ctx.translate(cx, cy);
   ctx.scale(pulse, pulse);
-
-  // Stem
-  ctx.strokeStyle = '#2d8a3e';
+  ctx.strokeStyle = '#228800';
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(0, -9);
-  ctx.quadraticCurveTo(5, -13, 7, -8);
+  ctx.moveTo(-6, -8);
+  ctx.quadraticCurveTo(0, -14, 8, -10);
   ctx.stroke();
-
-  // Left cherry
-  ctx.fillStyle = '#e02040';
+  ctx.fillStyle = '#ff4444';
+  ctx.strokeStyle = '#660000';
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.arc(-4, 2, 5.5, 0, Math.PI * 2);
+  ctx.arc(-5, 2, 6, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#ff6b85';
+  ctx.stroke();
   ctx.beginPath();
-  ctx.arc(-5.5, 0, 1.8, 0, Math.PI * 2);
+  ctx.arc(5, 2, 6, 0, Math.PI * 2);
   ctx.fill();
-
-  // Right cherry
-  ctx.fillStyle = '#e02040';
-  ctx.beginPath();
-  ctx.arc(4, 2, 5.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#ff6b85';
-  ctx.beginPath();
-  ctx.arc(2.5, 0, 1.8, 0, Math.PI * 2);
-  ctx.fill();
-
+  ctx.stroke();
   ctx.restore();
 }
 

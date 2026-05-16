@@ -1,0 +1,21 @@
+<svg viewBox="90 48 82 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cherry">
+  <defs>
+    <radialGradient id="cg1" cx="35%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#ff4444"/>
+      <stop offset="100%" stop-color="#880000"/>
+    </radialGradient>
+    <radialGradient id="cg2" cx="35%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#ff6666"/>
+      <stop offset="100%" stop-color="#990000"/>
+    </radialGradient>
+  </defs>
+  <path d="M118 100 C118 78 128 60 140 55 C152 50 158 60 150 72" stroke="#228800" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M138 100 C138 80 148 62 140 55" stroke="#228800" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <rect x="95" y="98" width="46" height="46" rx="14" fill="url(#cg1)"/>
+  <rect x="95" y="98" width="46" height="46" rx="14" fill="none" stroke="#660000" stroke-width="2"/>
+  <rect x="117" y="98" width="46" height="46" rx="14" fill="url(#cg2)"/>
+  <rect x="117" y="98" width="46" height="46" rx="14" fill="none" stroke="#660000" stroke-width="2"/>
+  <ellipse cx="108" cy="110" rx="8" ry="5" fill="white" opacity="0.5" transform="rotate(-20 108 110)"/>
+  <ellipse cx="129" cy="110" rx="7" ry="4" fill="white" opacity="0.45" transform="rotate(-20 129 110)"/>
+  <path d="M136 60 C128 48 116 50 118 60 C120 70 132 68 136 60Z" fill="#33bb00"/>
+</svg>
