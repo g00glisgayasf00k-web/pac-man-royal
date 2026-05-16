@@ -11,9 +11,9 @@ import { GameEngine } from '../../shared/gameEngine';
 import { GameCanvas } from './components/GameCanvas';
 import { Lobby } from './components/Lobby';
 import { OnlineWaiting } from './components/OnlineWaiting';
-import { MobileControls } from './components/MobileControls';
 import { Scoreboard } from './components/Scoreboard';
 import { useKeyboardInput } from './hooks/useInput';
+import { useSwipeInput } from './hooks/useSwipeInput';
 import type { AuthUser } from './auth/types';
 
 const SERVER_URL =
@@ -147,7 +147,11 @@ export default function GameApp({ user, onLogout }: Props) {
     [mode, playerId, roomCode, snapshot]
   );
 
-  useKeyboardInput(screen !== 'lobby' && !!snapshot, playerSlot, sendInput);
+  const waitingOnline = mode === 'online' && onlineLobby && !snapshot;
+  const controlsEnabled = screen === 'game' && !!snapshot && !waitingOnline;
+
+  useKeyboardInput(controlsEnabled, playerSlot, sendInput);
+  const swipeHandlers = useSwipeInput(controlsEnabled, sendInput);
 
   useEffect(() => {
     const lock = screen === 'game';
@@ -197,9 +201,6 @@ export default function GameApp({ user, onLogout }: Props) {
     );
   }
 
-  const waitingOnline = mode === 'online' && onlineLobby && !snapshot;
-  const controlsEnabled = screen === 'game' && !!snapshot && !waitingOnline;
-
   return (
     <div className="app game-screen">
       <header className="top-bar">
@@ -215,7 +216,10 @@ export default function GameApp({ user, onLogout }: Props) {
           <OnlineWaiting lobby={onlineLobby} />
         ) : (
           <>
-            <div className="game-stage">
+            <div
+              className={`game-stage${controlsEnabled ? ' swipe-input' : ''}`}
+              {...swipeHandlers}
+            >
               <GameCanvas snapshot={snapshot} />
             </div>
             <Scoreboard snapshot={snapshot} highlightId={playerId} />
@@ -235,15 +239,13 @@ export default function GameApp({ user, onLogout }: Props) {
         </div>
       )}
 
-      <MobileControls enabled={controlsEnabled} onDirection={sendInput} />
-
       {!waitingOnline && (
         <footer className="hint-bar">
           <span className="hint-desktop">
             Arrow keys to move • Catch Pac-Man to become him • Eat pellets for points
           </span>
           <span className="hint-mobile">
-            Use the D-pad to move • Catch Pac-Man to become him • Eat pellets for points
+            Swipe on the maze to move • Catch Pac-Man to become him • Eat pellets for points
           </span>
         </footer>
       )}
