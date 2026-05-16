@@ -5,10 +5,8 @@ export interface LeaderboardEntry {
   username: string;
   displayName: string;
   wins: number;
-  /** Best score in a single 3-minute match */
+  /** Highest score achieved in one 3-minute match */
   bestScore: number;
-  /** Sum of points across all matches */
-  totalPoints: number;
   gamesPlayed: number;
 }
 

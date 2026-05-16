@@ -70,10 +70,8 @@ async function saveFileStore() {
 
 function toEntries(rows: StatsRecord[]): LeaderboardEntry[] {
   return rows
-    .sort(
-      (a, b) =>
-        b.wins - a.wins || b.bestScore - a.bestScore || b.totalPoints - a.totalPoints
-    )
+    .filter((row) => row.bestScore > 0 || row.gamesPlayed > 0)
+    .sort((a, b) => b.bestScore - a.bestScore || b.wins - a.wins)
     .slice(0, 50)
     .map((row, i) => ({
       rank: i + 1,
@@ -81,7 +79,6 @@ function toEntries(rows: StatsRecord[]): LeaderboardEntry[] {
       displayName: row.displayName,
       wins: row.wins,
       bestScore: row.bestScore,
-      totalPoints: row.totalPoints,
       gamesPlayed: row.gamesPlayed,
     }));
 }
@@ -119,7 +116,7 @@ export async function getLeaderboard(
        FROM leaderboard_stats s
        JOIN users u ON u.id = s.user_id
        WHERE s.mode = $1
-       ORDER BY s.wins DESC, s.best_score DESC, s.total_points DESC
+       ORDER BY s.best_score DESC, s.wins DESC
        LIMIT $2`,
       [mode, cap]
     );
@@ -129,7 +126,6 @@ export async function getLeaderboard(
       displayName: row.display_name,
       wins: row.wins,
       bestScore: row.best_score,
-      totalPoints: Number(row.total_points),
       gamesPlayed: row.games_played,
     }));
   }

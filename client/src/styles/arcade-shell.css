@@ -289,7 +289,7 @@
 
 .arcade-gate .leaderboard-list li {
   display: grid;
-  grid-template-columns: auto 1fr auto auto auto;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
