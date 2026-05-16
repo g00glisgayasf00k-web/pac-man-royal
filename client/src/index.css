@@ -173,8 +173,8 @@ body.game-locked #root {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.35rem;
-  padding: 0.5rem 1rem 0.4rem;
+  gap: 0.45rem;
+  padding: 0.5rem 1rem 0.75rem;
   border-bottom: 1px solid var(--panel-border);
   background: rgba(10, 10, 24, 0.92);
   backdrop-filter: blur(8px);
@@ -255,12 +255,36 @@ body.game-locked #root {
   line-height: 1.1;
 }
 
-.scoreboard-goal {
+.scoreboard-timer {
   flex-shrink: 0;
-  margin: 0;
-  font-size: 0.68rem;
-  color: var(--muted);
+  margin: 0.5rem 0 0;
+  padding: 0.25rem 0 0.1rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  letter-spacing: 0.14em;
+  color: #fff4a8;
   white-space: nowrap;
+  text-shadow:
+    0 0 2px #fffde7,
+    0 0 8px #ffe000,
+    0 0 18px rgba(255, 214, 0, 0.9),
+    0 0 32px rgba(255, 140, 0, 0.55),
+    0 0 48px rgba(255, 80, 0, 0.35);
+  animation: scoreboard-timer-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes scoreboard-timer-glow {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.94;
+    filter: brightness(1.12);
+  }
 }
 
 .overlay {
@@ -494,7 +518,9 @@ body.game-locked #root {
   }
 
   .scoreboard-timer {
-    font-size: 0.75rem;
+    margin-top: 0.4rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
   }
 }
 

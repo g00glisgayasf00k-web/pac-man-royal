@@ -21,10 +21,12 @@ export function GameCanvas({ snapshot, liveSnapshotRef, blendHz = 60 }: Props) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
+    ctx.imageSmoothingEnabled = false;
 
     const blendMs = 1000 / blendHz;
+    const allowExtrap = blendHz < 55;
     const net = { prev: null as GameSnapshot | null, curr: null as GameSnapshot | null, at: 0 };
     let layoutW = 0;
     let layoutH = 0;
@@ -63,7 +65,7 @@ export function GameCanvas({ snapshot, liveSnapshotRef, blendHz = 60 }: Props) {
           const t = elapsed / blendMs;
           if (net.prev && t < 1) {
             snap = interpolateSnapshots(net.prev, net.curr, t);
-          } else if (net.prev && elapsed < blendMs + EXTRAP_MAX_MS) {
+          } else if (allowExtrap && net.prev && elapsed < blendMs + EXTRAP_MAX_MS) {
             const past = (elapsed - blendMs) / blendMs;
             snap = extrapolateSnapshots(net.prev, net.curr, past);
           } else {

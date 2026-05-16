@@ -58,6 +58,7 @@ function ensurePelletLayer(snap: GameSnapshot) {
     pelletLayer.width = MAZE_W;
     pelletLayer.height = MAZE_H;
     pelletLayerCtx = pelletLayer.getContext('2d');
+    if (pelletLayerCtx) pelletLayerCtx.imageSmoothingEnabled = false;
   }
   const layer = pelletLayerCtx;
   if (!layer) return;
@@ -90,7 +91,17 @@ function ensurePelletLayer(snap: GameSnapshot) {
   layer.fill();
 }
 
+/** Snap entity centers to half-pixels to stop sub-pixel flicker when scaled */
+function snapEntityPx(tileX: number, tileY: number) {
+  return {
+    x: Math.round(tileX * TILE_SIZE * 2) / 2,
+    y: Math.round(tileY * TILE_SIZE * 2) / 2,
+  };
+}
+
 export function renderGame(ctx: CanvasRenderingContext2D, snap: GameSnapshot, width: number, height: number) {
+  ctx.imageSmoothingEnabled = false;
+
   const canvasW = MAZE_W;
   const canvasH = MAZE_H;
   const scale = Math.min(width / canvasW, height / canvasH) * 0.98;
@@ -128,7 +139,7 @@ function drawFruit(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
   const ts = TILE_SIZE;
   const cx = snap.fruit.col * ts + ts / 2;
   const cy = snap.fruit.row * ts + ts / 2;
-  const pulse = 1 + Math.sin(snap.tick / 6) * 0.06;
+  const pulse = 1 + Math.sin(performance.now() * 0.006) * 0.06;
   const size = ts * 1.35 * pulse;
 
   const sprite = getFruitSprite(snap.fruit.kind);
@@ -191,18 +202,17 @@ function drawFruitFallback(
 }
 
 function drawPlayers(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
-  const t = snap.tick / 8;
+  const animT = performance.now() * 0.008;
   const now = Date.now();
   for (const p of snap.players) {
-    const x = p.x * TILE_SIZE;
-    const y = p.y * TILE_SIZE;
+    const { x, y } = snapEntityPx(p.x, p.y);
     const isPac = p.id === snap.pacmanId && p.role === 'pacman';
 
     ctx.globalAlpha = p.respawnUntil > now ? 0.4 : 1;
 
     if (isPac && p.speedBoostUntil > now) {
       ctx.save();
-      ctx.globalAlpha = 0.35 + Math.sin(t * 2) * 0.15;
+      ctx.globalAlpha = 0.35 + Math.sin(animT * 2) * 0.15;
       ctx.fillStyle = '#fff59d';
       ctx.beginPath();
       ctx.arc(x, y, TILE_SIZE * 0.55, 0, Math.PI * 2);
@@ -211,7 +221,7 @@ function drawPlayers(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
     }
 
     if (isPac) {
-      drawPacman(ctx, x, y, p.dir, t, p.color);
+      drawPacman(ctx, x, y, p.dir, animT, p.color);
     } else {
       drawGhost(ctx, x, y, p.color);
     }
