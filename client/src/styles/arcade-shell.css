@@ -372,17 +372,45 @@
     grid-template-columns: 1fr;
   }
 
-  .arcade-gate .player-card {
-    width: 72px;
-    padding: 8px 6px;
+  .arcade-gate .players-grid {
+    flex-wrap: nowrap;
+    gap: 4px;
+    justify-content: space-between;
+    width: 100%;
   }
 
-  .arcade-gate .players-grid {
-    gap: 8px;
+  .arcade-gate .player-card {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    padding: 6px 2px;
+  }
+
+  .arcade-gate .player-sprite {
+    margin-bottom: 4px;
   }
 
   .arcade-gate .player-sprite svg {
-    width: 36px;
-    height: 36px;
+    width: min(28px, 100%);
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .arcade-gate .player-name {
+    font-size: 5px;
+    margin-bottom: 2px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .arcade-gate .player-tag {
+    font-size: 4px;
+    padding: 1px 3px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

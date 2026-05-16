@@ -2,17 +2,21 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import type { PublicUser } from './authTypes.js';
+import {
+  getUserByTokenPostgres,
+  loginUserPostgres,
+  normalizeUsername,
+  registerUserPostgres,
+  revokeTokenPostgres,
+} from './authPostgres.js';
+import { useDatabase } from './db.js';
+
+export type { PublicUser } from './authTypes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, '../data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
-
-export interface PublicUser {
-  id: string;
-  username: string;
-  displayName: string;
-  createdAt: number;
-}
 
 interface UserRecord extends PublicUser {
   passwordHash: string;
@@ -63,11 +67,7 @@ function toPublic(user: UserRecord): PublicUser {
   };
 }
 
-function normalizeUsername(username: string) {
-  return username.trim().toLowerCase();
-}
-
-export async function registerUser(
+async function registerUserFile(
   username: string,
   password: string,
   displayName: string
@@ -95,7 +95,7 @@ export async function registerUser(
   return { token, user: toPublic(user) };
 }
 
-export async function loginUser(
+async function loginUserFile(
   username: string,
   password: string
 ): Promise<{ token: string; user: PublicUser }> {
@@ -110,7 +110,7 @@ export async function loginUser(
   return { token, user: toPublic(user) };
 }
 
-export async function getUserByToken(token: string | undefined): Promise<PublicUser | null> {
+async function getUserByTokenFile(token: string | undefined): Promise<PublicUser | null> {
   if (!token) return null;
   await loadStore();
   const userId = sessions.get(token);
@@ -119,6 +119,36 @@ export async function getUserByToken(token: string | undefined): Promise<PublicU
   return user ? toPublic(user) : null;
 }
 
-export function revokeToken(token: string | undefined) {
+function revokeTokenFile(token: string | undefined) {
   if (token) sessions.delete(token);
+}
+
+export async function registerUser(
+  username: string,
+  password: string,
+  displayName: string
+): Promise<{ token: string; user: PublicUser }> {
+  if (useDatabase()) return registerUserPostgres(username, password, displayName);
+  return registerUserFile(username, password, displayName);
+}
+
+export async function loginUser(
+  username: string,
+  password: string
+): Promise<{ token: string; user: PublicUser }> {
+  if (useDatabase()) return loginUserPostgres(username, password);
+  return loginUserFile(username, password);
+}
+
+export async function getUserByToken(token: string | undefined): Promise<PublicUser | null> {
+  if (useDatabase()) return getUserByTokenPostgres(token);
+  return getUserByTokenFile(token);
+}
+
+export function revokeToken(token: string | undefined) {
+  if (useDatabase()) {
+    void revokeTokenPostgres(token);
+    return;
+  }
+  revokeTokenFile(token);
 }

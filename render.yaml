@@ -8,3 +8,13 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pac-man-royal-db
+          property: connectionString
+
+databases:
+  - name: pac-man-royal-db
+    plan: free
+    databaseName: pac_man_royal
+    user: pac_man_royal

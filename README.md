@@ -61,3 +61,16 @@ Serve the client `dist` behind the same host (default in production) or set `VIT
 - Online multiplayer uses WebSockets on the same URL as the game (no extra env vars needed).
 - The free tier sleeps after ~15 minutes of no traffic; the first visit may take 30–60 seconds to wake up.
 - For reliable multiplayer, use a paid instance so the server stays awake.
+
+### Persistent player accounts (required for a community)
+
+Render **wipes the server disk on every deploy**. If accounts are stored only in a local file, every push deletes all sign-ups.
+
+This project uses **PostgreSQL** when `DATABASE_URL` is set (configured automatically via `render.yaml`).
+
+1. Deploy with the **Blueprint** (`render.yaml`) so Render creates a free Postgres database and links it to the web service, **or**
+2. On an existing service: **New +** → **PostgreSQL** → create DB → copy **Internal Database URL** → add env var `DATABASE_URL` on your web service → redeploy.
+
+Local dev without Postgres still uses `server/data/users.json` (fine for testing only).
+
+Check persistence after deploy: open `https://YOUR-APP.onrender.com/api/health` — `userStore` should be `"postgres"`, not `"file"`.

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { Server } from 'socket.io';
 import { authRouter } from './authRoutes.js';
 import { attachRoomHandlers, GameRoom } from './gameRoom.js';
+import { initDb, useDatabase } from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3001;
@@ -22,7 +23,7 @@ attachRoomHandlers(io, rooms);
 app.use('/api/auth', authRouter);
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, rooms: rooms.size });
+  res.json({ ok: true, rooms: rooms.size, userStore: useDatabase() ? 'postgres' : 'file' });
 });
 
 const clientDist = path.join(__dirname, '../../client/dist');
@@ -33,6 +34,24 @@ app.get('*', (_req, res) => {
   });
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`Pac-Man Battle Royale server on http://localhost:${PORT}`);
-});
+async function start() {
+  try {
+    await initDb();
+    if (useDatabase()) {
+      console.log('User accounts: PostgreSQL (persists across deploys)');
+    } else {
+      console.warn(
+        'User accounts: local JSON only — set DATABASE_URL on Render or accounts reset each deploy'
+      );
+    }
+  } catch (err) {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+  }
+
+  httpServer.listen(PORT, () => {
+    console.log(`Pac-Man Battle Royale server on http://localhost:${PORT}`);
+  });
+}
+
+void start();
