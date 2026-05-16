@@ -53,6 +53,29 @@ function clampTile(col: number, row: number): { col: number; row: number } {
   return { col: c, row: r };
 }
 
+/** One BFS from start — tile distances for all reachable cells */
+function bfsDistancesFrom(fromCol: number, fromRow: number): Map<string, number> {
+  const dist = new Map<string, number>();
+  if (!isWalkable(fromCol, fromRow)) return dist;
+
+  const q: { col: number; row: number; d: number }[] = [{ col: fromCol, row: fromRow, d: 0 }];
+  dist.set(key(fromCol, fromRow), 0);
+  let qi = 0;
+
+  while (qi < q.length) {
+    const { col, row, d } = q[qi++];
+    for (const dir of DIRS) {
+      const next = stepTile(col, row, dir);
+      if (!next) continue;
+      const k = key(next.col, next.row);
+      if (dist.has(k)) continue;
+      dist.set(k, d + 1);
+      q.push({ col: next.col, row: next.row, d: d + 1 });
+    }
+  }
+  return dist;
+}
+
 /** BFS path length in tiles; Infinity if unreachable */
 export function bfsDistance(
   fromCol: number,
@@ -61,24 +84,8 @@ export function bfsDistance(
   toRow: number
 ): number {
   if (fromCol === toCol && fromRow === toRow) return 0;
-  if (!isWalkable(toCol, toRow)) return Infinity;
-
-  const seen = new Set<string>([key(fromCol, fromRow)]);
-  const q: { col: number; row: number; dist: number }[] = [{ col: fromCol, row: fromRow, dist: 0 }];
-
-  while (q.length) {
-    const { col, row, dist } = q.shift()!;
-    for (const dir of DIRS) {
-      const next = stepTile(col, row, dir);
-      if (!next) continue;
-      const k = key(next.col, next.row);
-      if (seen.has(k)) continue;
-      if (next.col === toCol && next.row === toRow) return dist + 1;
-      seen.add(k);
-      q.push({ col: next.col, row: next.row, dist: dist + 1 });
-    }
-  }
-  return Infinity;
+  const dist = bfsDistancesFrom(fromCol, fromRow);
+  return dist.get(key(toCol, toRow)) ?? Infinity;
 }
 
 /** First direction to take on shortest path toward target */
@@ -95,9 +102,10 @@ export function bfsFirstDirection(
   type Node = { col: number; row: number; first: Direction | null };
   const seen = new Set<string>([key(fromCol, fromRow)]);
   const q: Node[] = [{ col: fromCol, row: fromRow, first: null }];
+  let qi = 0;
 
-  while (q.length) {
-    const { col, row, first } = q.shift()!;
+  while (qi < q.length) {
+    const { col, row, first } = q[qi++];
     for (const dir of DIRS) {
       if (first === null && forbidDir !== 'none' && dir === forbidDir) continue;
       const next = stepTile(col, row, dir);
@@ -111,6 +119,39 @@ export function bfsFirstDirection(
     }
   }
   return 'none';
+}
+
+function nearestGhostDist(
+  x: number,
+  y: number,
+  ghostPositions: { x: number; y: number }[]
+): number {
+  let nearest = Infinity;
+  for (const g of ghostPositions) {
+    nearest = Math.min(nearest, Math.hypot(x - g.x, y - g.y));
+  }
+  return nearest;
+}
+
+function chooseFleeDirection(
+  col: number,
+  row: number,
+  forbid: Direction,
+  ghostPositions: { x: number; y: number }[]
+): Direction {
+  let best: Direction = 'none';
+  let bestSafety = -1;
+  for (const dir of DIRS) {
+    if (dir === forbid) continue;
+    const next = stepTile(col, row, dir);
+    if (!next) continue;
+    const safety = nearestGhostDist(next.col + 0.5, next.row + 0.5, ghostPositions);
+    if (safety > bestSafety) {
+      bestSafety = safety;
+      best = dir;
+    }
+  }
+  return best;
 }
 
 export interface ActorTile {
@@ -140,20 +181,20 @@ export function getGhostTargetTile(ctx: GhostTargetCtx): { col: number; row: num
   let targetRow = pacRow;
 
   switch (ghost.slot) {
-    case 1: // Blinky — direct chase
+    case 1:
       break;
-    case 2: // Pinky — ambush (4 tiles ahead of Pac-Man)
+    case 2:
       targetCol = pacCol + dx * 4;
       targetRow = pacRow + dy * 4;
       break;
-    case 3: { // Inky — flanks using Blinky + Pac-Man
+    case 3: {
       const bCol = blinky ? Math.floor(blinky.x) : pacCol;
       const bRow = blinky ? Math.floor(blinky.y) : pacRow;
       targetCol = pacCol + (pacCol - bCol);
       targetRow = pacRow + (pacRow - bRow);
       break;
     }
-    case 4: { // Clyde — chase when far, scatter corner when close
+    case 4: {
       const d = Math.hypot(ghost.x - pac.x, ghost.y - pac.y);
       if (d < 8) {
         targetCol = 0;
@@ -181,18 +222,18 @@ export function chooseGhostDirection(
   const pathDir = bfsFirstDirection(col, row, target.col, target.row, forbid);
   if (pathDir !== 'none') return pathDir;
 
-  // Fallback: greedy step toward target among legal turns
   const choices = DIRS.filter((d) => {
     if (d === forbid) return false;
     return stepTile(col, row, d) !== null;
   });
   if (!choices.length) return ghost.dir !== 'none' ? ghost.dir : 'left';
 
+  const distFromNext = bfsDistancesFrom(target.col, target.row);
   let best = choices[0];
   let bestDist = Infinity;
   for (const d of choices) {
     const next = stepTile(col, row, d)!;
-    const d0 = bfsDistance(next.col, next.row, target.col, target.row);
+    const d0 = distFromNext.get(key(next.col, next.row)) ?? Infinity;
     if (d0 < bestDist) {
       bestDist = d0;
       best = d;
@@ -222,42 +263,15 @@ export function choosePacmanDirection(
     if (exitDir !== 'none') return exitDir;
   }
 
+  const nearestGhost = nearestGhostDist(pac.x, pac.y, ghostPositions);
   const dangerRadius = 6;
-  let nearestGhost = Infinity;
-  for (const g of ghostPositions) {
-    const d = Math.hypot(pac.x - g.x, pac.y - g.y);
-    if (d < nearestGhost) nearestGhost = d;
-  }
 
-  // Flee when a ghost is close
   if (nearestGhost < dangerRadius && ghostPositions.length > 0) {
-    let fleeCol = col;
-    let fleeRow = row;
-    let bestSafety = -1;
-    for (let r = 0; r < MAZE_ROWS; r++) {
-      for (let c = 0; c < MAZE_COLS; c++) {
-        if (!isWalkable(c, r)) continue;
-        const dPath = bfsDistance(col, row, c, r);
-        if (dPath > 14) continue;
-        let minGhost = Infinity;
-        for (const g of ghostPositions) {
-          const gCol = Math.floor(g.x);
-          const gRow = Math.floor(g.y);
-          const gd = bfsDistance(c, r, gCol, gRow);
-          if (gd < minGhost) minGhost = gd;
-        }
-        if (minGhost > bestSafety) {
-          bestSafety = minGhost;
-          fleeCol = c;
-          fleeRow = r;
-        }
-      }
-    }
-    const fleeDir = bfsFirstDirection(col, row, fleeCol, fleeRow, forbid);
+    const fleeDir = chooseFleeDirection(col, row, forbid, ghostPositions);
     if (fleeDir !== 'none') return fleeDir;
   }
 
-  // Hunt nearest pellet (prefer power pellets when safe)
+  const distMap = bfsDistancesFrom(col, row);
   let bestCol = col;
   let bestRow = row;
   let bestScore = Infinity;
@@ -268,12 +282,11 @@ export function choosePacmanDirection(
       const hasPower = powerPellets[r]?.[c];
       if (!hasDot && !hasPower) continue;
 
-      const pathLen = bfsDistance(col, row, c, r);
-      if (pathLen === Infinity) continue;
+      const pathLen = distMap.get(key(c, r));
+      if (pathLen === undefined) continue;
 
       let score = pathLen;
       if (hasPower && nearestGhost > 8) score -= 3;
-      if (hasDot) score += 0;
 
       if (score < bestScore) {
         bestScore = score;
