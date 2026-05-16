@@ -1,4 +1,3 @@
-import { FRUIT_DEFINITIONS } from '../../../shared/fruits';
 import { GameSnapshot, TILE_SIZE } from '../../../shared/gameTypes';
 import { MAZE_COLS, MAZE_ROWS } from '../../../shared/maze';
 
@@ -40,7 +39,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, snap: GameSnapshot, wi
   }
 
   drawPellets(ctx, snap);
-  drawFruit(ctx, snap);
+  drawCherry(ctx, snap);
   drawPlayers(ctx, snap);
 
   ctx.restore();
@@ -66,29 +65,46 @@ function drawPellets(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
   }
 }
 
-function drawFruit(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
+function drawCherry(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
   if (!snap.fruit) return;
   const ts = TILE_SIZE;
-  const def = FRUIT_DEFINITIONS[snap.fruit.kind];
   const cx = snap.fruit.col * ts + ts / 2;
   const cy = snap.fruit.row * ts + ts / 2;
-  const pulse = 1 + Math.sin(snap.tick / 6) * 0.08;
+  const pulse = 1 + Math.sin(snap.tick / 6) * 0.06;
 
   ctx.save();
   ctx.translate(cx, cy);
   ctx.scale(pulse, pulse);
-  ctx.fillStyle = def.color;
+
+  // Stem
+  ctx.strokeStyle = '#2d8a3e';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.arc(0, 0, 7, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 1.5;
+  ctx.moveTo(0, -9);
+  ctx.quadraticCurveTo(5, -13, 7, -8);
   ctx.stroke();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 8px system-ui';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(def.label[0].toUpperCase(), 0, 1);
+
+  // Left cherry
+  ctx.fillStyle = '#e02040';
+  ctx.beginPath();
+  ctx.arc(-4, 2, 5.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff6b85';
+  ctx.beginPath();
+  ctx.arc(-5.5, 0, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Right cherry
+  ctx.fillStyle = '#e02040';
+  ctx.beginPath();
+  ctx.arc(4, 2, 5.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff6b85';
+  ctx.beginPath();
+  ctx.arc(2.5, 0, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
   ctx.restore();
 }
 
@@ -102,22 +118,13 @@ function drawPlayers(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
 
     ctx.globalAlpha = p.respawnUntil > now ? 0.4 : 1;
 
-    if (isPac && p.speedBoostUntil > now) {
+    if (p.speedBoostUntil > now) {
       ctx.save();
       ctx.globalAlpha = 0.35 + Math.sin(t * 2) * 0.15;
       ctx.fillStyle = '#fff59d';
       ctx.beginPath();
       ctx.arc(x, y, TILE_SIZE * 0.55, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
-    }
-    if (isPac && p.shieldUntil > now) {
-      ctx.save();
-      ctx.strokeStyle = '#66ffcc';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(x, y, TILE_SIZE * 0.5, 0, Math.PI * 2);
-      ctx.stroke();
       ctx.restore();
     }
 

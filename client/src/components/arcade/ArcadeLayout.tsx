@@ -68,7 +68,7 @@ export function ArcadeRuleCards() {
         </span>
         <p className="rule-text">
           <strong>POWER PELLETS</strong>
-          Pac-Man eats a power pellet — ghosts turn blue &amp; vulnerable. Eat them for bonus pts!
+          Anyone can grab them for 1.5× speed. They respawn every 30 seconds on the map.
         </p>
       </div>
     </div>
