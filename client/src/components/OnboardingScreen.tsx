@@ -3,7 +3,7 @@ import { useState } from 'react';
 const STEPS = [
   {
     title: 'Battle Royale Pac-Man',
-    body: 'Five players drop from the ghost box. One starts as Pac-Man — the rest hunt as ghosts. First to 1000 points wins.',
+    body: 'Five players drop from the ghost box. One starts as Pac-Man — the rest hunt as ghosts. Highest score after 3 minutes wins.',
     icon: '👑',
   },
   {

@@ -1,8 +1,12 @@
 import type { FruitState } from './fruits';
 
-export const WIN_SCORE = 1000;
 export const PELLET_POINTS = 10;
 export const POWER_PELLET_POINTS = 50;
+/** Match length — highest score when the clock hits zero wins */
+export const MATCH_DURATION_MS = 3 * 60 * 1000;
+export const MATCH_DURATION_LABEL = '3:00';
+/** Regular pellets respawn this long after being eaten */
+export const PELLET_RESPAWN_MS = 30 * 1000;
 export const TILE_SIZE = 16;
 export const TICK_MS = 1000 / 60;
 /** Fixed simulation step (seconds) — decoupled from display refresh rate */
@@ -18,7 +22,7 @@ export const MOVE_SPEED = 2.3;
 /** Power pellet speed boost for whoever collects it */
 export const POWER_SPEED_MULT = 1.5;
 export const POWER_SPEED_MS = 8000;
-export const POWER_PELLET_RESPAWN_MS = 30000;
+export const POWER_PELLET_RESPAWN_MS = PELLET_RESPAWN_MS;
 
 /** Single fruit respawns after collection (30s) */
 export const CHERRY_RESPAWN_MS = 30000;
@@ -112,10 +116,19 @@ export interface GameSnapshot {
   powerPellets: boolean[][];
   fruit: FruitState | null;
   ghostsReleasedAt: number;
+  /** Unix ms when the match ends (3-minute timer) */
+  matchEndsAt: number;
   winnerId: string | null;
   winnerName: string | null;
   status: 'playing' | 'ended';
   pacmanId: string;
+}
+
+export function formatMatchTimeRemaining(ms: number): string {
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 export interface InputPayload {

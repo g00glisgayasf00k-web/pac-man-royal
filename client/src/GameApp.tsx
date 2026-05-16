@@ -15,7 +15,6 @@ import {
   ghostNameForSlot,
   soloDifficultyLabel,
   soloDifficultySpeedMultiplier,
-  WIN_SCORE,
 } from '../../shared/gameTypes';
 import { GameEngine } from '../../shared/gameEngine';
 import { GameCanvas } from './components/GameCanvas';
@@ -366,7 +365,10 @@ export default function GameApp({
         <div className="overlay win-overlay">
           <div className="win-card">
             <h2>{snapshot.winnerName} wins!</h2>
-            <p>Reached {WIN_SCORE} points</p>
+            <p>
+              Highest score when time ran out —{' '}
+              {snapshot.players.find((p) => p.id === snapshot.winnerId)?.score ?? 0} pts
+            </p>
             <div className="win-actions">
               <button type="button" className="btn-primary" onClick={playAgain}>
                 Play again

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { WIN_SCORE } from '../../../../shared/gameTypes';
+import { MATCH_DURATION_LABEL } from '../../../../shared/gameTypes';
 import {
   BlinkySprite,
   ClydeSprite,
@@ -43,7 +43,8 @@ export function ArcadeRuleCards() {
           </span>
           <p className="rule-text">
             <strong>BE PAC-MAN</strong>
-            Eat pellets to score. First to {WIN_SCORE.toLocaleString()} points wins the match.
+            Eat pellets to score. Pellets respawn every 30s. Highest score after{' '}
+            {MATCH_DURATION_LABEL} wins.
           </p>
         </div>
         <div className="rule-card">
@@ -154,7 +155,7 @@ export function ArcadeTargetScore({ label }: { label: string }) {
           <div className="target-fill" style={{ width: '100%' }} />
         </div>
         <p className="target-pts">
-          {WIN_SCORE.toLocaleString()} <span>POINTS</span>
+          {MATCH_DURATION_LABEL} <span>MATCH</span>
         </p>
       </div>
     </div>

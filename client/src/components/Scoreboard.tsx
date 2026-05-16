@@ -1,4 +1,5 @@
-import { GameSnapshot, WIN_SCORE } from '../../../shared/gameTypes';
+import { useEffect, useState } from 'react';
+import { formatMatchTimeRemaining, GameSnapshot } from '../../../shared/gameTypes';
 
 interface Props {
   snapshot: GameSnapshot | null;
@@ -6,9 +7,18 @@ interface Props {
 }
 
 export function Scoreboard({ snapshot, highlightId }: Props) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!snapshot || snapshot.status === 'ended') return;
+    const id = window.setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [snapshot?.status, snapshot?.matchEndsAt]);
+
   if (!snapshot) return null;
 
   const sorted = [...snapshot.players].sort((a, b) => b.score - a.score);
+  const remaining = formatMatchTimeRemaining(snapshot.matchEndsAt - now);
 
   return (
     <div className="scoreboard" role="region" aria-label="Live scores">
@@ -35,7 +45,9 @@ export function Scoreboard({ snapshot, highlightId }: Props) {
         ))}
       </ol>
 
-      <p className="scoreboard-goal">First to {WIN_SCORE}</p>
+      <p className="scoreboard-goal" aria-live="polite">
+        {snapshot.status === 'ended' ? "Time's up" : remaining} · highest score wins
+      </p>
     </div>
   );
 }

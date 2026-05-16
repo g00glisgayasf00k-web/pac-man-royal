@@ -13,8 +13,9 @@ import {
   POWER_PELLET_RESPAWN_MS,
   POWER_SPEED_MS,
   POWER_SPEED_MULT,
+  MATCH_DURATION_MS,
+  PELLET_RESPAWN_MS,
   RESPAWN_MS,
-  WIN_SCORE,
 } from './gameTypes';
 import {
   FRUIT_POINTS,
@@ -57,23 +58,27 @@ function dist(a: { x: number; y: number }, b: { x: number; y: number }): number 
 function clonePellets(): {
   pellets: boolean[][];
   powerPellets: boolean[][];
+  pelletRespawnAt: number[][];
   powerRespawnAt: number[][];
 } {
   const pellets: boolean[][] = [];
   const powerPellets: boolean[][] = [];
+  const pelletRespawnAt: number[][] = [];
   const powerRespawnAt: number[][] = [];
   for (let row = 0; row < MAZE_ROWS; row++) {
     pellets[row] = [];
     powerPellets[row] = [];
+    pelletRespawnAt[row] = [];
     powerRespawnAt[row] = [];
     for (let col = 0; col < MAZE_COLS; col++) {
       const ch = MAZE_LAYOUT[row][col];
       pellets[row][col] = ch === '.';
       powerPellets[row][col] = ch === 'o';
+      pelletRespawnAt[row][col] = 0;
       powerRespawnAt[row][col] = 0;
     }
   }
-  return { pellets, powerPellets, powerRespawnAt };
+  return { pellets, powerPellets, pelletRespawnAt, powerRespawnAt };
 }
 
 export function createInitialPlayers(
@@ -107,7 +112,9 @@ export class GameEngine {
   players: PlayerState[] = [];
   pellets: boolean[][] = [];
   powerPellets: boolean[][] = [];
+  private pelletRespawnAt: number[][] = [];
   private powerRespawnAt: number[][] = [];
+  matchEndsAt = 0;
   fruit: FruitState | null = null;
   winnerId: string | null = null;
   winnerName: string | null = null;
@@ -125,10 +132,12 @@ export class GameEngine {
     options?: { moveSpeed?: number }
   ) {
     this.moveSpeed = options?.moveSpeed ?? MOVE_SPEED;
-    const { pellets, powerPellets, powerRespawnAt } = clonePellets();
+    const { pellets, powerPellets, pelletRespawnAt, powerRespawnAt } = clonePellets();
     this.pellets = pellets;
     this.powerPellets = powerPellets;
+    this.pelletRespawnAt = pelletRespawnAt;
     this.powerRespawnAt = powerRespawnAt;
+    this.matchEndsAt = Date.now() + MATCH_DURATION_MS;
     this.players = createInitialPlayers(playerConfigs);
     const pac = this.players.find((p) => p.role === 'pacman');
     this.pacmanId = pac?.id ?? this.players[0].id;
@@ -144,6 +153,7 @@ export class GameEngine {
       powerPellets: this.powerPellets.map((r) => [...r]),
       fruit: this.fruit ? { ...this.fruit } : null,
       ghostsReleasedAt: this.ghostsReleasedAt,
+      matchEndsAt: this.matchEndsAt,
       winnerId: this.winnerId,
       winnerName: this.winnerName,
       status: this.status,
@@ -171,7 +181,7 @@ export class GameEngine {
       this.aiTimer = 0;
       this.runAI();
     }
-    this.updatePowerPellets(now);
+    this.updatePelletRespawns(now);
     this.updateFruit(now);
 
     for (const p of this.players) {
@@ -195,11 +205,16 @@ export class GameEngine {
     return this.moveSpeed;
   }
 
-  private updatePowerPellets(now: number) {
+  private updatePelletRespawns(now: number) {
     for (let row = 0; row < MAZE_ROWS; row++) {
       for (let col = 0; col < MAZE_COLS; col++) {
-        const at = this.powerRespawnAt[row]?.[col] ?? 0;
-        if (at > 0 && now >= at) {
+        const pelletAt = this.pelletRespawnAt[row]?.[col] ?? 0;
+        if (pelletAt > 0 && now >= pelletAt) {
+          this.pellets[row][col] = true;
+          this.pelletRespawnAt[row][col] = 0;
+        }
+        const powerAt = this.powerRespawnAt[row]?.[col] ?? 0;
+        if (powerAt > 0 && now >= powerAt) {
           this.powerPellets[row][col] = true;
           this.powerRespawnAt[row][col] = 0;
         }
@@ -232,6 +247,7 @@ export class GameEngine {
 
     if (isPac && this.pellets[row]?.[col]) {
       this.pellets[row][col] = false;
+      this.pelletRespawnAt[row][col] = now + PELLET_RESPAWN_MS;
       p.score += PELLET_POINTS;
     }
 
@@ -452,13 +468,20 @@ export class GameEngine {
   }
 
   private checkWin() {
+    if (Date.now() < this.matchEndsAt) return;
+
+    let winner = this.players[0];
     for (const p of this.players) {
-      if (p.score >= WIN_SCORE) {
-        this.status = 'ended';
-        this.winnerId = p.id;
-        this.winnerName = p.name;
-        return;
-      }
+      if (p.score > winner.score) winner = p;
     }
+    const top = winner.score;
+    const tied = this.players.filter((p) => p.score === top);
+    if (tied.length > 1) {
+      winner = tied.reduce((a, b) => (a.slot < b.slot ? a : b));
+    }
+
+    this.status = 'ended';
+    this.winnerId = winner.id;
+    this.winnerName = winner.name;
   }
 }

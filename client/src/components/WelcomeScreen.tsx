@@ -5,7 +5,7 @@ import {
   OnlineJoinMode,
   OnlineLaunchOptions,
   SoloDifficulty,
-  WIN_SCORE,
+  MATCH_DURATION_LABEL,
 } from '../../../shared/gameTypes';
 import {
   ArcadeFooter,
@@ -106,7 +106,7 @@ export function WelcomeScreen({ onPlay, onLogout }: Props) {
             <div className="target-fill" style={{ width: `${progress}%` }} />
           </div>
           <p className="target-pts">
-            {WIN_SCORE.toLocaleString()} <span>POINTS</span>
+            {MATCH_DURATION_LABEL} <span>MATCH</span>
           </p>
         </div>
       </div>
