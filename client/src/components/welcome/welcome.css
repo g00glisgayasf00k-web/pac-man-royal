@@ -1,5 +1,16 @@
 @import '../../styles/arcade-shell.css';
 
+.arcade-gate.welcome-gate .welcome-top-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.arcade-gate.welcome-gate .welcome-top-bar .btn-sec {
+  font-size: 7px;
+  padding: 8px 10px;
+}
+
 .arcade-gate.welcome-gate .target-fill {
   transition: width 0.08s linear;
 }

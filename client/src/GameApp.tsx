@@ -14,7 +14,6 @@ import {
 } from '../../shared/gameTypes';
 import { GameEngine } from '../../shared/gameEngine';
 import { GameCanvas } from './components/GameCanvas';
-import { GameModeMenu } from './components/GameModeMenu';
 import { OnlineWaiting } from './components/OnlineWaiting';
 import { Scoreboard } from './components/Scoreboard';
 import { useKeyboardInput } from './hooks/useInput';
@@ -27,7 +26,7 @@ const SERVER_URL =
   import.meta.env.VITE_SERVER_URL ??
   (import.meta.env.DEV ? 'http://localhost:3001' : window.location.origin);
 
-type Screen = 'menu' | 'game' | 'win';
+type Screen = 'game' | 'win';
 
 type JoinResponse = {
   ok: boolean;
@@ -42,7 +41,6 @@ type Props = {
   user: AuthUser;
   launchMode: GameMode;
   onlineLaunch: OnlineLaunchOptions;
-  onLogout: () => void;
   onExitToWelcome: () => void;
 };
 
@@ -50,7 +48,6 @@ export default function GameApp({
   user,
   launchMode,
   onlineLaunch,
-  onLogout,
   onExitToWelcome,
 }: Props) {
   const [screen, setScreen] = useState<Screen>('game');
@@ -61,7 +58,6 @@ export default function GameApp({
   const [playerSlot, setPlayerSlot] = useState(0);
   const [roomCode, setRoomCode] = useState('');
   const [onlineStatus, setOnlineStatus] = useState('');
-  const [onlineError, setOnlineError] = useState('');
   const engineRef = useRef<GameEngine | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const rafRef = useRef(0);
@@ -127,12 +123,30 @@ export default function GameApp({
     rafRef.current = requestAnimationFrame(loop);
   }, [stopLoop, pushUiSnapshot, UI_DT]);
 
+  const cleanupMatch = useCallback(() => {
+    stopLoop();
+    socketRef.current?.disconnect();
+    socketRef.current = null;
+    engineRef.current = null;
+    liveSnapshotRef.current = null;
+    setSnapshot(null);
+    setOnlineLobby(null);
+    setRoomCode('');
+    setOnlineStatus('');
+  }, [stopLoop]);
+
+  const exitToWelcome = useCallback(() => {
+    cleanupMatch();
+    resultRecordedRef.current = false;
+    autoStartedRef.current = false;
+    onExitToWelcome();
+  }, [cleanupMatch, onExitToWelcome]);
+
   const handleJoinResponse = useCallback(
     (socket: Socket, res: JoinResponse) => {
       if (!res.ok) {
-        setOnlineError(res.error ?? 'Could not join');
         socket.disconnect();
-        setScreen('menu');
+        exitToWelcome();
         return;
       }
       setPlayerId(res.playerId!);
@@ -144,19 +158,16 @@ export default function GameApp({
       setOnlineStatus(`${humans}/${res.lobby?.maxPlayers ?? 5} players${codeLabel}`);
       setScreen('game');
     },
-    []
+    [exitToWelcome]
   );
 
   const startGame = useCallback(
     (gameMode: GameMode, name: string, online?: OnlineLaunchOptions) => {
       setMode(gameMode);
-      setOnlineError('');
-
       if (gameMode === 'online') {
         const join = online ?? onlineLaunchRef.current;
         if (join.joinMode === 'join' && !join.code?.trim()) {
-          setOnlineError('Enter a room code');
-          setScreen('menu');
+          exitToWelcome();
           return;
         }
 
@@ -227,7 +238,7 @@ export default function GameApp({
       setScreen('game');
       startLocalLoop();
     },
-    [startLocalLoop, handleJoinResponse]
+    [startLocalLoop, handleJoinResponse, exitToWelcome]
   );
 
   const sendInput = useCallback(
@@ -284,27 +295,10 @@ export default function GameApp({
   }, [screen, snapshot, mode, playerId]);
 
   useEffect(() => {
-    if (screen === 'menu') resultRecordedRef.current = false;
-  }, [screen]);
-
-  useEffect(() => {
     if (autoStartedRef.current) return;
     autoStartedRef.current = true;
     startGame(launchMode, user.displayName, launchMode === 'online' ? onlineLaunch : undefined);
   }, [launchMode, onlineLaunch, user.displayName, startGame]);
-
-  const cleanupMatch = useCallback(() => {
-    stopLoop();
-    socketRef.current?.disconnect();
-    socketRef.current = null;
-    engineRef.current = null;
-    liveSnapshotRef.current = null;
-    setSnapshot(null);
-    setOnlineLobby(null);
-    setRoomCode('');
-    setOnlineStatus('');
-    setOnlineError('');
-  }, [stopLoop]);
 
   const playAgain = useCallback(() => {
     cleanupMatch();
@@ -313,48 +307,11 @@ export default function GameApp({
     startGame(mode, user.displayName);
   }, [cleanupMatch, mode, user.displayName, startGame]);
 
-  const exitToWelcome = useCallback(() => {
-    cleanupMatch();
-    resultRecordedRef.current = false;
-    autoStartedRef.current = false;
-    onExitToWelcome();
-  }, [cleanupMatch, onExitToWelcome]);
-
-  const openMenu = useCallback(() => {
-    if (waitingOnline) {
-      exitToWelcome();
-      return;
-    }
-    cleanupMatch();
-    setScreen('menu');
-  }, [waitingOnline, exitToWelcome, cleanupMatch]);
-
-  if (screen === 'menu') {
-    return (
-      <>
-        {onlineError && (
-          <p className="online-error" style={{ textAlign: 'center', color: '#f87171' }}>
-            {onlineError}
-          </p>
-        )}
-        <GameModeMenu
-          displayName={user.displayName}
-          username={user.username}
-          onStart={(gameMode, online) => {
-            setOnlineError('');
-            startGame(gameMode, user.displayName, online);
-          }}
-          onLogout={onLogout}
-        />
-      </>
-    );
-  }
-
   return (
     <div className="app game-screen">
       <header className="top-bar">
-        <button type="button" className="btn-ghost" onClick={openMenu}>
-          ← Menu
+        <button type="button" className="btn-ghost" onClick={exitToWelcome}>
+          ← Exit
         </button>
         <h1>Pac-Man Battle Royale</h1>
         {onlineStatus && <span className="room-tag">{onlineStatus}</span>}

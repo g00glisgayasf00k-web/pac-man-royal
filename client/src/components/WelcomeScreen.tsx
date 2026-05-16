@@ -15,11 +15,12 @@ import './welcome/welcome.css';
 
 type Props = {
   onPlay: (mode: GameMode, online?: OnlineLaunchOptions) => void;
+  onLogout?: () => void;
 };
 
 const LOAD_MS = 2800;
 
-export function WelcomeScreen({ onPlay }: Props) {
+export function WelcomeScreen({ onPlay, onLogout }: Props) {
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState<'solo' | 'online'>('solo');
@@ -77,6 +78,13 @@ export function WelcomeScreen({ onPlay }: Props) {
 
   return (
     <ArcadeGate className="welcome-gate">
+      {onLogout && (
+        <div className="welcome-top-bar">
+          <button type="button" className="btn-sec" onClick={onLogout}>
+            SIGN OUT
+          </button>
+        </div>
+      )}
       <ArcadeHeader />
 
       <div className="target-bar">

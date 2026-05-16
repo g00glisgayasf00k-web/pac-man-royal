@@ -90,7 +90,7 @@ export default function App() {
   }
 
   if (phase === 'welcome') {
-    return <WelcomeScreen onPlay={continueToGame} />;
+    return <WelcomeScreen onPlay={continueToGame} onLogout={session ? handleLogout : undefined} />;
   }
 
   if (phase === 'boot') {
@@ -119,11 +119,10 @@ export default function App() {
         user={session.user}
         launchMode={launchMode}
         onlineLaunch={onlineLaunch}
-        onLogout={handleLogout}
         onExitToWelcome={handleExitToWelcome}
       />
     );
   }
 
-  return <WelcomeScreen onPlay={continueToGame} />;
+  return <WelcomeScreen onPlay={continueToGame} onLogout={session ? handleLogout : undefined} />;
 }
