@@ -342,3 +342,173 @@
   margin: 0;
   font-size: 0.9rem;
 }
+
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-nav button {
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #14141e;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.admin-nav button.active {
+  background: #2121de;
+  border-color: #2121de;
+  color: #fff;
+}
+
+.admin-banner {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.admin-banner-error {
+  background: #3a1515;
+  border: 1px solid #ff4444;
+  color: #ffaaaa;
+}
+
+.admin-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-panel-head h2 {
+  margin: 0;
+}
+
+.admin-search {
+  flex: 1;
+  min-width: 200px;
+  max-width: 320px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #0a0a12;
+  color: #fff;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: #2121de;
+  color: #fff;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.admin-btn-sm {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.admin-btn-danger {
+  background: #b91c1c;
+}
+
+.admin-btn-danger:hover {
+  filter: brightness(1.15);
+}
+
+.admin-actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.admin-section-gap {
+  margin-top: 2rem;
+}
+
+.admin-room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.admin-room-card {
+  background: #0a0a12;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.admin-room-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.admin-room-card header strong {
+  font-size: 1.1rem;
+  color: #ffe000;
+  letter-spacing: 0.1em;
+}
+
+.admin-status {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background: #333;
+  color: #ccc;
+}
+
+.admin-status-playing {
+  background: #14532d;
+  color: #86efac;
+}
+
+.admin-status-lobby {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+
+.admin-room-players {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.admin-room-players li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  font-size: 0.85rem;
+}
+
+.admin-room-players .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.admin-tag {
+  font-size: 0.65rem;
+  color: #888;
+  margin-left: auto;
+}

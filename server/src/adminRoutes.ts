@@ -1,9 +1,15 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
+import type { PublicUser } from './authTypes.js';
 import { isAdminUsername } from './admin.js';
+import { deleteAdminUser, listAdminUsers } from './adminUsers.js';
 import { getUserByToken } from './auth.js';
+import type { GameRoom } from './gameRoom.js';
+import { getAdminLiveRooms } from './gameRoom.js';
 import { getAdminMetrics } from './metrics.js';
 
-export function createAdminRouter(getLiveRooms: () => number) {
+type AdminRequest = Request & { adminUser?: PublicUser };
+
+export function createAdminRouter(rooms: Map<string, GameRoom>) {
   const router = Router();
 
   function bearerToken(req: { headers: { authorization?: string } }) {
@@ -12,7 +18,7 @@ export function createAdminRouter(getLiveRooms: () => number) {
     return header.slice(7).trim();
   }
 
-  router.get('/metrics', async (req, res) => {
+  async function requireAdmin(req: AdminRequest, res: Response, next: NextFunction) {
     const user = await getUserByToken(bearerToken(req));
     if (!user) {
       res.status(401).json({ error: 'Not authenticated' });
@@ -22,13 +28,9 @@ export function createAdminRouter(getLiveRooms: () => number) {
       res.status(403).json({ error: 'Admin access required' });
       return;
     }
-    try {
-      const metrics = await getAdminMetrics(getLiveRooms());
-      res.json(metrics);
-    } catch (e) {
-      res.status(500).json({ error: e instanceof Error ? e.message : 'Failed to load metrics' });
-    }
-  });
+    req.adminUser = user;
+    next();
+  }
 
   router.get('/check', async (req, res) => {
     const user = await getUserByToken(bearerToken(req));
@@ -37,6 +39,42 @@ export function createAdminRouter(getLiveRooms: () => number) {
       return;
     }
     res.json({ ok: true, admin: isAdminUsername(user.username) });
+  });
+
+  router.get('/metrics', requireAdmin, async (_req, res) => {
+    try {
+      const metrics = await getAdminMetrics(rooms.size);
+      res.json(metrics);
+    } catch (e) {
+      res.status(500).json({ error: e instanceof Error ? e.message : 'Failed to load metrics' });
+    }
+  });
+
+  router.get('/users', requireAdmin, async (req, res) => {
+    try {
+      const search = String(req.query.q ?? '');
+      const limit = Number(req.query.limit ?? 100);
+      const data = await listAdminUsers(search, limit);
+      res.json(data);
+    } catch (e) {
+      res.status(500).json({ error: e instanceof Error ? e.message : 'Failed to load users' });
+    }
+  });
+
+  router.get('/rooms', requireAdmin, (_req, res) => {
+    res.json(getAdminLiveRooms(rooms));
+  });
+
+  router.delete('/users/:userId', requireAdmin, async (req: AdminRequest, res) => {
+    try {
+      const userId = String(req.params.userId);
+      await deleteAdminUser(userId, req.adminUser!.username);
+      res.json({ ok: true });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Delete failed';
+      const status = msg === 'User not found' ? 404 : 400;
+      res.status(status).json({ error: msg });
+    }
   });
 
   return router;

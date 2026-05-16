@@ -25,7 +25,7 @@ attachRoomHandlers(io, rooms);
 
 app.use('/api/auth', authRouter);
 app.use('/api/leaderboard', leaderboardRouter);
-app.use('/api/admin', createAdminRouter(() => rooms.size));
+app.use('/api/admin', createAdminRouter(rooms));
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, userStore: useDatabase() ? 'postgres' : 'file' });

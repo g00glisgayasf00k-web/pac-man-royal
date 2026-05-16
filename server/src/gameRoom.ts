@@ -8,6 +8,7 @@ import {
   type InputPayload,
   type OnlineLobbySnapshot,
 } from '../../shared/gameTypes.js';
+import type { AdminLiveRoom, AdminLiveRoomsResponse } from '../../shared/adminTypes.js';
 import * as Engine from '../../shared/gameEngine.js';
 import { recordGameResultForUser } from './leaderboard.js';
 import { getUserByToken } from './auth.js';
@@ -364,6 +365,28 @@ export function attachRoomHandlers(io: Server, rooms: Map<string, GameRoom>) {
       if (snap) io.to(code).emit('game-state', snap);
     }
   }, 16);
+}
+
+export function getAdminLiveRooms(rooms: Map<string, GameRoom>): AdminLiveRoomsResponse {
+  const list: AdminLiveRoom[] = [];
+  for (const [, room] of rooms) {
+    list.push({
+      code: room.code,
+      status: room.status,
+      private: room.private,
+      playerCount: room.players.size,
+      humanCount: room.humanCount(),
+      maxPlayers: MAX_PLAYERS,
+      autoStartAt: room.autoStartAt,
+      players: [...room.players.values()].map((p) => ({
+        name: p.name,
+        slot: p.slot,
+        isAI: p.isAI,
+      })),
+    });
+  }
+  list.sort((a, b) => b.humanCount - a.humanCount || a.code.localeCompare(b.code));
+  return { rooms: list };
 }
 
 function getLobbyState(room: GameRoom): OnlineLobbySnapshot {

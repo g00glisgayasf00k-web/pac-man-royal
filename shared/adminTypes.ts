@@ -53,3 +53,41 @@ export interface AdminMetrics {
   topPlayers: AdminTopPlayer[];
   recentGames: AdminRecentGame[];
 }
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  displayName: string;
+  createdAt: number;
+  gamesPlayed: number;
+  wins: number;
+  totalPoints: number;
+  activeSessions: number;
+  isAdmin: boolean;
+}
+
+export interface AdminUsersResponse {
+  users: AdminUser[];
+  total: number;
+}
+
+export interface AdminLiveRoomPlayer {
+  name: string;
+  slot: number;
+  isAI: boolean;
+}
+
+export interface AdminLiveRoom {
+  code: string;
+  status: 'lobby' | 'playing' | 'ended';
+  private: boolean;
+  playerCount: number;
+  humanCount: number;
+  maxPlayers: number;
+  autoStartAt: number | null;
+  players: AdminLiveRoomPlayer[];
+}
+
+export interface AdminLiveRoomsResponse {
+  rooms: AdminLiveRoom[];
+}
