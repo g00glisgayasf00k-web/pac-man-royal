@@ -240,9 +240,43 @@ body.game-locked #root {
   overflow-y: auto;
 }
 
-.scoreboard h2 {
+.scoreboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.scoreboard-header h2 {
   font-size: 1rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
+}
+
+.scoreboard-toggle {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: var(--ghost-btn);
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 6px;
+  border: 1px solid var(--panel-border);
+}
+
+.scoreboard-toggle:active {
+  background: var(--accent-dim);
+  color: #1a1000;
+}
+
+.scoreboard-peek {
+  display: none;
+}
+
+.scoreboard.collapsed .scoreboard-body {
+  display: none;
 }
 
 .scoreboard .goal {
@@ -574,17 +608,44 @@ body.game-locked #root {
     border-radius: 10px;
     background: rgba(10, 10, 24, 0.88);
     backdrop-filter: blur(6px);
-    overflow-y: auto;
-    pointer-events: none;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
+    pointer-events: auto;
+    touch-action: manipulation;
+    transition: width 0.2s ease, max-height 0.2s ease;
   }
 
-  .scoreboard h2 {
+  .scoreboard.collapsed {
+    width: auto;
+    min-width: 5.5rem;
+    max-height: none;
+  }
+
+  .scoreboard-header h2 {
     font-size: 0.7rem;
-    margin-bottom: 0.15rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--muted);
+  }
+
+  .scoreboard-toggle {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 1rem;
+  }
+
+  .scoreboard-peek {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 0.15rem;
+    text-align: right;
+  }
+
+  .scoreboard-body {
+    overflow-y: auto;
+    max-height: min(38vh, 12rem);
+    -webkit-overflow-scrolling: touch;
   }
 
   .scoreboard .goal,
