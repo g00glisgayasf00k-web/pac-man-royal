@@ -1,12 +1,20 @@
 import { GameSnapshot, TILE_SIZE } from '../../../shared/gameTypes';
+import { FruitKind } from '../../../shared/fruits';
 import { MAZE_COLS, MAZE_ROWS } from '../../../shared/maze';
 
 const PELLET_COLOR = '#ffb8ae';
 
+const FRUIT_SPRITE_PATHS: Record<FruitKind, string> = {
+  cherry: '/cherry.svg',
+  orange: '/orange.svg',
+  apple: '/apple.svg',
+  lemon: '/lemon.svg',
+};
+
 let mazeBg: HTMLImageElement | null = null;
 let bgLoadStarted = false;
-let cherrySprite: HTMLImageElement | null = null;
-let cherryLoadStarted = false;
+const fruitSprites: Partial<Record<FruitKind, HTMLImageElement>> = {};
+const fruitLoadStarted = new Set<FruitKind>();
 
 function getMazeBackground(): HTMLImageElement | null {
   if (mazeBg?.complete) return mazeBg;
@@ -18,14 +26,17 @@ function getMazeBackground(): HTMLImageElement | null {
   return mazeBg?.complete ? mazeBg : null;
 }
 
-function getCherrySprite(): HTMLImageElement | null {
-  if (cherrySprite?.complete) return cherrySprite;
-  if (!cherryLoadStarted) {
-    cherryLoadStarted = true;
-    cherrySprite = new Image();
-    cherrySprite.src = '/cherry.svg';
+function getFruitSprite(kind: FruitKind): HTMLImageElement | null {
+  const cached = fruitSprites[kind];
+  if (cached?.complete) return cached;
+  if (!fruitLoadStarted.has(kind)) {
+    fruitLoadStarted.add(kind);
+    const img = new Image();
+    img.src = FRUIT_SPRITE_PATHS[kind];
+    fruitSprites[kind] = img;
   }
-  return cherrySprite?.complete ? cherrySprite : null;
+  const img = fruitSprites[kind];
+  return img?.complete ? img : null;
 }
 
 export function renderGame(ctx: CanvasRenderingContext2D, snap: GameSnapshot, width: number, height: number) {
@@ -51,7 +62,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, snap: GameSnapshot, wi
   }
 
   drawPellets(ctx, snap);
-  drawCherry(ctx, snap);
+  drawFruit(ctx, snap);
   drawPlayers(ctx, snap);
 
   ctx.restore();
@@ -77,7 +88,7 @@ function drawPellets(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
   }
 }
 
-function drawCherry(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
+function drawFruit(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
   if (!snap.fruit) return;
   const ts = TILE_SIZE;
   const cx = snap.fruit.col * ts + ts / 2;
@@ -85,17 +96,18 @@ function drawCherry(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
   const pulse = 1 + Math.sin(snap.tick / 6) * 0.06;
   const size = ts * 1.35 * pulse;
 
-  const sprite = getCherrySprite();
+  const sprite = getFruitSprite(snap.fruit.kind);
   if (sprite) {
     ctx.drawImage(sprite, cx - size / 2, cy - size / 2, size, size);
     return;
   }
 
-  drawCherryFallback(ctx, cx, cy, pulse);
+  drawFruitFallback(ctx, snap.fruit.kind, cx, cy, pulse);
 }
 
-function drawCherryFallback(
+function drawFruitFallback(
   ctx: CanvasRenderingContext2D,
+  kind: FruitKind,
   cx: number,
   cy: number,
   pulse: number
@@ -103,24 +115,43 @@ function drawCherryFallback(
   ctx.save();
   ctx.translate(cx, cy);
   ctx.scale(pulse, pulse);
-  ctx.strokeStyle = '#228800';
-  ctx.lineWidth = 2;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(-6, -8);
-  ctx.quadraticCurveTo(0, -14, 8, -10);
-  ctx.stroke();
-  ctx.fillStyle = '#ff4444';
-  ctx.strokeStyle = '#660000';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(-5, 2, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(5, 2, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
+
+  if (kind === 'cherry') {
+    ctx.strokeStyle = '#228800';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-6, -8);
+    ctx.quadraticCurveTo(0, -14, 8, -10);
+    ctx.stroke();
+    ctx.fillStyle = '#ff4444';
+    ctx.strokeStyle = '#660000';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(-5, 2, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(5, 2, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  } else if (kind === 'orange') {
+    ctx.fillStyle = '#ff8800';
+    ctx.beginPath();
+    ctx.arc(0, 0, 7, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (kind === 'apple') {
+    ctx.fillStyle = '#44cc22';
+    ctx.beginPath();
+    ctx.arc(0, 1, 7, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = '#dddd22';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 6, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   ctx.restore();
 }
 

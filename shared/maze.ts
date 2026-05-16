@@ -68,6 +68,14 @@ export const CLASSIC_SPAWNS: { col: number; row: number }[] = [
   { col: 16, row: 17 }, // Clyde
 ];
 
+/** Side tunnel on the middle corridor (left/right exits only) */
+export const TUNNEL_ROW = 35;
+export const TUNNEL_LEFT_MIN = 1;
+export const TUNNEL_LEFT_MAX = 6;
+export const TUNNEL_RIGHT_MIN = 21;
+export const TUNNEL_RIGHT_MAX = 26;
+const TUNNEL_WRAP_DELTA = TUNNEL_RIGHT_MAX - TUNNEL_LEFT_MIN + 1;
+
 export function tileAt(col: number, row: number): string {
   if (row < 0 || row >= MAZE_ROWS || col < 0 || col >= MAZE_COLS) return '_';
   return MAZE_LAYOUT[row][col];
@@ -87,20 +95,24 @@ export function isWalkable(col: number, row: number): boolean {
   return t === ' ' || t === '.' || t === 'o' || t === '-';
 }
 
-/** Single center-line tunnel row (classic Pac-Man side wrap) */
-export const TUNNEL_ROW = 11;
-
-/** Horizontal side tunnels (wrap left edge to right edge) */
 export function isTunnelRow(row: number): boolean {
   return row === TUNNEL_ROW;
 }
 
+/** Wrap column when entering/exiting the left or right tunnel mouth */
 export function wrapCol(col: number, row: number): number {
   if (!isTunnelRow(row)) return col;
-  let c = col;
-  while (c < 0) c += MAZE_COLS;
-  while (c >= MAZE_COLS) c -= MAZE_COLS;
-  return c;
+  if (col < TUNNEL_LEFT_MIN) return col + TUNNEL_WRAP_DELTA;
+  if (col > TUNNEL_RIGHT_MAX) return col - TUNNEL_WRAP_DELTA;
+  return col;
+}
+
+/** Wrap world X on the tunnel row (continuous position) */
+export function wrapWorldX(x: number, row: number): number {
+  if (!isTunnelRow(row)) return x;
+  if (x < TUNNEL_LEFT_MIN) return x + TUNNEL_WRAP_DELTA;
+  if (x >= TUNNEL_RIGHT_MAX + 1) return x - TUNNEL_WRAP_DELTA;
+  return x;
 }
 
 export function tileCenter(col: number, row: number): { x: number; y: number } {

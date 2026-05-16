@@ -13,8 +13,9 @@ export const POWER_SPEED_MULT = 1.5;
 export const POWER_SPEED_MS = 8000;
 export const POWER_PELLET_RESPAWN_MS = 30000;
 
-/** Single cherry respawns after collection */
+/** Single fruit respawns after collection (30s) */
 export const CHERRY_RESPAWN_MS = 30000;
+export const FRUIT_RESPAWN_MS = CHERRY_RESPAWN_MS;
 
 export const LANE_CENTER_EPS = 0.1;
 export const CAPTURE_COOLDOWN_MS = 1500;

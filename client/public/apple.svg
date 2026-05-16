@@ -1,0 +1,15 @@
+<svg viewBox="408 52 104 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Apple">
+  <defs>
+    <radialGradient id="ag" cx="35%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#88ff44"/>
+      <stop offset="100%" stop-color="#226600"/>
+    </radialGradient>
+  </defs>
+  <rect x="461" y="52" width="5" height="26" rx="2" fill="#553300"/>
+  <path d="M466 65 C474 50 488 54 484 66 C480 78 468 74 466 65Z" fill="#33bb00"/>
+  <path d="M420 122 C420 88 436 68 464 68 C492 68 508 88 508 122 C508 154 492 172 464 172 C436 172 420 154 420 122Z" fill="url(#ag)"/>
+  <path d="M420 122 C420 88 436 68 464 68 C492 68 508 88 508 122 C508 154 492 172 464 172 C436 172 420 154 420 122Z" fill="none" stroke="#115500" stroke-width="3"/>
+  <path d="M457 72 C456 64 460 58 464 58 C468 58 472 64 471 72" fill="none" stroke="#115500" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="443" cy="90" rx="14" ry="9" fill="white" opacity="0.45" transform="rotate(-30 443 90)"/>
+  <ellipse cx="435" cy="97" rx="5" ry="3" fill="white" opacity="0.3"/>
+</svg>

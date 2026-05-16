@@ -16,7 +16,12 @@ import {
   RESPAWN_MS,
   WIN_SCORE,
 } from './gameTypes';
-import { CHERRY_POINTS, FruitState, getCherrySpawnCandidates } from './fruits';
+import {
+  FRUIT_POINTS,
+  FruitState,
+  getFruitSpawnCandidates,
+  pickRandomFruitKind,
+} from './fruits';
 import {
   chooseGhostDirection,
   choosePacmanDirection,
@@ -30,6 +35,7 @@ import {
   isWall,
   MAZE_COLS,
   wrapCol,
+  wrapWorldX,
   MAZE_LAYOUT,
   MAZE_ROWS,
   tileCenter,
@@ -109,8 +115,8 @@ export class GameEngine {
   pacmanId = '';
   ghostsReleasedAt = 0;
   private aiTimer = 0;
-  private nextCherrySpawnAt = 0;
-  private cherryIdSeq = 0;
+  private nextFruitSpawnAt = 0;
+  private fruitIdSeq = 0;
 
   constructor(playerConfigs: { id: string; name: string; slot: number; isAI: boolean }[]) {
     const { pellets, powerPellets, powerRespawnAt } = clonePellets();
@@ -121,7 +127,7 @@ export class GameEngine {
     const pac = this.players.find((p) => p.role === 'pacman');
     this.pacmanId = pac?.id ?? this.players[0].id;
     this.ghostsReleasedAt = Date.now() + GHOST_HEAD_START_MS;
-    this.spawnCherry();
+    this.spawnFruit();
   }
 
   getSnapshot(): GameSnapshot {
@@ -160,7 +166,7 @@ export class GameEngine {
       this.runAI();
     }
     this.updatePowerPellets(now);
-    this.updateCherry(now);
+    this.updateFruit(now);
 
     for (const p of this.players) {
       if (p.respawnUntil > now) continue;
@@ -195,22 +201,23 @@ export class GameEngine {
     }
   }
 
-  private updateCherry(now: number) {
-    if (!this.fruit && now >= this.nextCherrySpawnAt) {
-      this.spawnCherry();
+  private updateFruit(now: number) {
+    if (!this.fruit && now >= this.nextFruitSpawnAt) {
+      this.spawnFruit();
     }
   }
 
-  private spawnCherry() {
-    const candidates = getCherrySpawnCandidates();
+  private spawnFruit() {
+    const candidates = getFruitSpawnCandidates();
     if (!candidates.length) return;
     const spot = candidates[Math.floor(Math.random() * candidates.length)];
     this.fruit = {
-      id: `cherry-${++this.cherryIdSeq}`,
+      id: `fruit-${++this.fruitIdSeq}`,
+      kind: pickRandomFruitKind(),
       col: spot.col,
       row: spot.row,
     };
-    this.nextCherrySpawnAt = Number.MAX_SAFE_INTEGER;
+    this.nextFruitSpawnAt = Number.MAX_SAFE_INTEGER;
   }
 
   private collectPickups(p: PlayerState, now: number) {
@@ -231,10 +238,15 @@ export class GameEngine {
       }
     }
 
-    if (this.fruit && col === this.fruit.col && row === this.fruit.row) {
-      p.score += CHERRY_POINTS;
+    if (
+      isPac &&
+      this.fruit &&
+      col === this.fruit.col &&
+      row === this.fruit.row
+    ) {
+      p.score += FRUIT_POINTS[this.fruit.kind];
       this.fruit = null;
-      this.nextCherrySpawnAt = now + CHERRY_RESPAWN_MS;
+      this.nextFruitSpawnAt = now + CHERRY_RESPAWN_MS;
     }
   }
 
@@ -378,8 +390,7 @@ export class GameEngine {
 
     const tunnelRow = Math.floor(ny);
     if (isTunnelRow(tunnelRow) && dx !== 0) {
-      while (nx < 0) nx += MAZE_COLS;
-      while (nx >= MAZE_COLS) nx -= MAZE_COLS;
+      nx = wrapWorldX(nx, tunnelRow);
     }
 
     if (this.wouldHitWall(p.x, p.y, p.dir)) {
@@ -393,16 +404,10 @@ export class GameEngine {
     p.y = ny;
 
     const { col, row } = worldToTile(p.x, p.y);
-    if (isWall(col, row)) {
-      if (isTunnelRow(row) && p.dir === 'left' && col <= 0) {
-        p.x = MAZE_COLS - 1 + (p.x - Math.floor(p.x));
-      } else if (isTunnelRow(row) && p.dir === 'right' && col >= MAZE_COLS - 1) {
-        p.x = p.x - MAZE_COLS;
-      } else {
-        const c = tileCenter(col, row);
-        p.x = c.x;
-        p.y = c.y;
-      }
+    if (isWall(col, row) && !(isTunnelRow(row) && dx !== 0)) {
+      const c = tileCenter(col, row);
+      p.x = c.x;
+      p.y = c.y;
     }
   }
 

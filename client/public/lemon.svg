@@ -1,0 +1,15 @@
+<svg viewBox="568 52 88 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lemon">
+  <defs>
+    <radialGradient id="lg" cx="35%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#ffff66"/>
+      <stop offset="100%" stop-color="#aa8800"/>
+    </radialGradient>
+  </defs>
+  <rect x="607" y="56" width="5" height="20" rx="2" fill="#228800"/>
+  <path d="M612 68 C618 52 634 56 630 68 C626 80 614 76 612 68Z" fill="#33bb00"/>
+  <path d="M575 122 C575 92 586 72 612 72 C638 72 648 92 648 122 C648 152 638 170 612 170 C586 170 575 152 575 122Z" fill="url(#lg)"/>
+  <path d="M575 122 C575 92 586 72 612 72 C638 72 648 92 648 122 C648 152 638 170 612 170 C586 170 575 152 575 122Z" fill="none" stroke="#887700" stroke-width="3"/>
+  <ellipse cx="612" cy="169" rx="6" ry="5" fill="#cccc00"/>
+  <ellipse cx="592" cy="93" rx="13" ry="8" fill="white" opacity="0.48" transform="rotate(-30 592 93)"/>
+  <ellipse cx="584" cy="100" rx="5" ry="3" fill="white" opacity="0.3"/>
+</svg>

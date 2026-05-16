@@ -210,19 +210,20 @@ export default function GameApp({ user, onLogout }: Props) {
         {onlineStatus && <span className="room-tag">{onlineStatus}</span>}
       </header>
 
+      {!waitingOnline && (
+        <Scoreboard snapshot={snapshot} highlightId={playerId} />
+      )}
+
       <main className="play-area">
         {waitingOnline ? (
           <OnlineWaiting lobby={onlineLobby} />
         ) : (
-          <>
-            <div
-              className={`game-stage${controlsEnabled ? ' swipe-input' : ''}`}
-              {...swipeHandlers}
-            >
-              <GameCanvas snapshot={snapshot} />
-            </div>
-            <Scoreboard snapshot={snapshot} highlightId={playerId} />
-          </>
+          <div
+            className={`game-stage${controlsEnabled ? ' swipe-input' : ''}`}
+            {...swipeHandlers}
+          >
+            <GameCanvas snapshot={snapshot} />
+          </div>
         )}
       </main>
 

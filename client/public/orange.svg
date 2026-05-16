@@ -1,0 +1,20 @@
+<svg viewBox="248 52 92 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Orange">
+  <defs>
+    <radialGradient id="og" cx="35%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#ffcc44"/>
+      <stop offset="100%" stop-color="#cc5500"/>
+    </radialGradient>
+  </defs>
+  <rect x="299" y="58" width="5" height="22" rx="2" fill="#228800"/>
+  <path d="M304 68 C310 54 322 56 320 66 C318 76 306 74 304 68Z" fill="#33bb00"/>
+  <rect x="258" y="78" width="88" height="88" rx="44" fill="url(#og)"/>
+  <rect x="258" y="78" width="88" height="88" rx="44" fill="none" stroke="#994400" stroke-width="3"/>
+  <circle cx="280" cy="100" r="3" fill="#dd7700" opacity="0.6"/>
+  <circle cx="320" cy="95" r="2.5" fill="#dd7700" opacity="0.6"/>
+  <circle cx="310" cy="120" r="3" fill="#dd7700" opacity="0.6"/>
+  <circle cx="278" cy="128" r="2.5" fill="#dd7700" opacity="0.6"/>
+  <circle cx="295" cy="110" r="2" fill="#dd7700" opacity="0.4"/>
+  <circle cx="330" cy="112" r="2.5" fill="#dd7700" opacity="0.5"/>
+  <ellipse cx="280" cy="95" rx="16" ry="9" fill="white" opacity="0.45" transform="rotate(-25 280 95)"/>
+  <ellipse cx="270" cy="100" rx="5" ry="3" fill="white" opacity="0.3"/>
+</svg>
