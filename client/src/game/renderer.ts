@@ -118,7 +118,7 @@ function drawPlayers(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
 
     ctx.globalAlpha = p.respawnUntil > now ? 0.4 : 1;
 
-    if (p.speedBoostUntil > now) {
+    if (isPac && p.speedBoostUntil > now) {
       ctx.save();
       ctx.globalAlpha = 0.35 + Math.sin(t * 2) * 0.15;
       ctx.fillStyle = '#fff59d';

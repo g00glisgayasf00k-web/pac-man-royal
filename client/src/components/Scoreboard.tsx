@@ -13,7 +13,8 @@ export function Scoreboard({ snapshot, highlightId }: Props) {
   const sorted = [...snapshot.players].sort((a, b) => b.score - a.score);
   const now = Date.now();
   const you = sorted.find((p) => p.id === highlightId);
-  const youBoosted = you && you.speedBoostUntil > now;
+  const youBoosted =
+    you && you.id === snapshot.pacmanId && you.speedBoostUntil > now;
 
   return (
     <aside className={`scoreboard${open ? '' : ' collapsed'}`}>
@@ -40,7 +41,7 @@ export function Scoreboard({ snapshot, highlightId }: Props) {
           </p>
         )}
         {snapshot.fruit && <p className="status-line fruit">Cherry on the map — 100 pts</p>}
-        {youBoosted && <p className="status-line boost">Speed boost 1.5×</p>}
+        {youBoosted && <p className="status-line boost">Pac-Man speed boost 1.5×</p>}
         <ul>
           {sorted.map((p) => (
             <li

@@ -52,9 +52,8 @@ export default function GameApp({ user, onLogout }: Props) {
     const loop = (now: number) => {
       const engine = engineRef.current;
       if (!engine) return;
-      const dt = Math.min(0.05, (now - lastRef.current) / 1000);
       lastRef.current = now;
-      engine.step(dt);
+      engine.step(1 / 60);
       const snap = engine.getSnapshot();
       setSnapshot(snap);
       if (snap.status === 'ended') {

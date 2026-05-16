@@ -174,8 +174,12 @@ export class GameEngine {
     this.checkWin();
   }
 
+  /** Same base speed for every player. Only the current Pac-Man may move faster (power pellet). */
   private getMoveSpeed(p: PlayerState, now: number): number {
-    if (p.speedBoostUntil > now) return MOVE_SPEED * POWER_SPEED_MULT;
+    const isPac = p.id === this.pacmanId && p.role === 'pacman';
+    if (isPac && p.speedBoostUntil > now) {
+      return MOVE_SPEED * POWER_SPEED_MULT;
+    }
     return MOVE_SPEED;
   }
 
@@ -222,7 +226,9 @@ export class GameEngine {
       this.powerPellets[row][col] = false;
       this.powerRespawnAt[row][col] = now + POWER_PELLET_RESPAWN_MS;
       p.score += POWER_PELLET_POINTS;
-      p.speedBoostUntil = Math.max(p.speedBoostUntil, now + POWER_SPEED_MS);
+      if (isPac) {
+        p.speedBoostUntil = Math.max(p.speedBoostUntil, now + POWER_SPEED_MS);
+      }
     }
 
     if (this.fruit && col === this.fruit.col && row === this.fruit.row) {
@@ -419,6 +425,8 @@ export class GameEngine {
     oldPac.role = 'ghost';
     newPac.role = 'pacman';
     this.pacmanId = newPac.id;
+    oldPac.speedBoostUntil = 0;
+    newPac.speedBoostUntil = 0;
     const od = oldPac.dir;
     oldPac.dir = oppositeDir(newPac.dir === 'none' ? 'down' : newPac.dir);
     newPac.dir = od === 'none' ? 'up' : od;

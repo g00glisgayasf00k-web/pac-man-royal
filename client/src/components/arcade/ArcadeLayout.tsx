@@ -68,7 +68,7 @@ export function ArcadeRuleCards() {
         </span>
         <p className="rule-text">
           <strong>POWER PELLETS</strong>
-          Anyone can grab them for 1.5× speed. They respawn every 30 seconds on the map.
+          Anyone can grab them for points. Pac-Man gets 1.5× speed. Respawn every 30s.
         </p>
       </div>
     </div>
