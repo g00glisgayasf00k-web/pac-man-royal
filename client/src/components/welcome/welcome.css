@@ -1,0 +1,28 @@
+@import '../../styles/arcade-shell.css';
+
+.arcade-gate.welcome-gate .target-fill {
+  transition: width 0.08s linear;
+}
+
+.arcade-gate.welcome-gate .insert {
+  font-size: 8px;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+
+.arcade-gate.welcome-gate .insert.blink {
+  animation: welcome-blink 0.85s step-end infinite;
+}
+
+@keyframes welcome-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.arcade-gate.welcome-gate .btn-row .btn-play {
+  width: 100%;
+  flex: none;
+}

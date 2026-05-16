@@ -1,5 +1,14 @@
 import { FormEvent, useState } from 'react';
 import { GameMode } from '../../../shared/gameTypes';
+import {
+  ArcadeFooter,
+  ArcadeGate,
+  ArcadeHeader,
+  ArcadePlayers,
+  ArcadeRuleCards,
+  ArcadeTargetScore,
+} from './arcade/ArcadeLayout';
+import './lobby/lobby.css';
 
 interface Props {
   defaultName: string;
@@ -11,78 +20,81 @@ interface Props {
 export function Lobby({ defaultName, username, onStart, onLogout }: Props) {
   const [name, setName] = useState(defaultName);
   const [tab, setTab] = useState<'solo' | 'online'>('solo');
+  const [showOptions, setShowOptions] = useState(false);
 
-  const submit = (e: FormEvent, mode: GameMode) => {
+  const submit = (e: FormEvent) => {
     e.preventDefault();
-    onStart(mode, name.trim() || 'Player');
+    onStart(tab === 'solo' ? 'local' : 'online', name.trim() || 'Player');
   };
 
   return (
-    <div className="lobby">
-      <div className="lobby-account">
+    <ArcadeGate className="lobby-gate">
+      <div className="lobby-top-bar">
         <span className="lobby-user">@{username}</span>
-        <button type="button" className="btn-ghost btn-sm" onClick={onLogout}>
-          Sign out
+        <button type="button" className="btn-sec" onClick={onLogout}>
+          SIGN OUT
         </button>
       </div>
-      <header className="hero">
-        <h1>Pac-Man Battle Royale</h1>
-        <p className="tagline">
-          One Pac-Man. Four ghosts. Catch Pac-Man to become him. First to <strong>1000</strong>{' '}
-          points wins.
-        </p>
-      </header>
 
-      <form
-        className="lobby-card"
-        onSubmit={(e) => submit(e, tab === 'solo' ? 'local' : 'online')}
-      >
-        <label>
-          Your name
-          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={16} />
-        </label>
+      <ArcadeHeader />
+      <ArcadeRuleCards />
+      <ArcadePlayers />
+      <ArcadeTargetScore label="TARGET SCORE TO WIN" />
 
-        <div className="tabs">
-          <button
-            type="button"
-            className={tab === 'solo' ? 'active' : ''}
-            onClick={() => setTab('solo')}
-          >
-            Solo vs AI
+      {showOptions && (
+        <div className="lobby-setup">
+          <label>
+            YOUR NAME
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={16}
+              autoComplete="nickname"
+            />
+          </label>
+          <div className="lobby-mode-tabs">
+            <button
+              type="button"
+              className={tab === 'solo' ? 'active' : ''}
+              onClick={() => setTab('solo')}
+            >
+              SOLO VS AI
+            </button>
+            <button
+              type="button"
+              className={tab === 'online' ? 'active' : ''}
+              onClick={() => setTab('online')}
+            >
+              ONLINE
+            </button>
+          </div>
+          {tab === 'online' && (
+            <p className="lobby-hint">
+              Join matches with other players. Game starts at 5 players or after a short countdown
+              with 2+.
+            </p>
+          )}
+        </div>
+      )}
+
+      <p className="insert blink">— PRESS START —</p>
+
+      <form onSubmit={submit}>
+        <div className="btn-row btn-row-form">
+          <button type="submit" className="btn-play">
+            ▶ {tab === 'solo' ? 'START GAME' : 'JOIN GAME'}
           </button>
           <button
             type="button"
-            className={tab === 'online' ? 'active' : ''}
-            onClick={() => setTab('online')}
+            className={`btn-sec ${showOptions ? 'active' : ''}`}
+            onClick={() => setShowOptions((v) => !v)}
           >
-            Online
+            OPTIONS
           </button>
         </div>
-
-        <button type="submit" className="btn-primary">
-          {tab === 'solo' ? 'Play Solo' : 'Join Game'}
-        </button>
       </form>
 
-      <section className="rules">
-        <h3>Rules</h3>
-        <ul>
-          <li>Only the current Pac-Man can eat pellets for points.</li>
-          <li>Ghosts that tag Pac-Man instantly become the new Pac-Man.</li>
-          <li>The former Pac-Man respawns as a ghost.</li>
-          <li>Power pellets are worth 50 and give 1.5× speed for 8 seconds.</li>
-          <li>Ghosts get faster every 20 seconds — stay sharp!</li>
-          <li>Random fruits appear with bonus points and power-ups.</li>
-        </ul>
-        {tab === 'online' && (
-          <p className="controls-hint">
-            Join Game matches you with other players. The match starts when 5 join or after a short
-            countdown with 2+ players.
-          </p>
-        )}
-        <h3>Controls</h3>
-        <p className="controls-hint">Arrow keys to move</p>
-      </section>
-    </div>
+      <ArcadeFooter />
+    </ArcadeGate>
   );
 }

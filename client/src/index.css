@@ -1,3 +1,5 @@
+@import './styles/arcade-shell.css';
+
 :root {
   --bg: #07070f;
   --panel: #12122a;
@@ -55,57 +57,9 @@ label {
   color: var(--muted);
 }
 
-/* Lobby */
-.lobby {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2rem 1.25rem 3rem;
-}
-
-.hero h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
-  background: linear-gradient(135deg, #fde68a, #f59e0b);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 0.5rem;
-}
-
-.tagline {
-  color: var(--muted);
-  font-size: 1.05rem;
-  line-height: 1.5;
-  margin-bottom: 2rem;
-}
-
-.lobby-card {
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.tabs {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.tabs button {
-  flex: 1;
-  min-width: 100px;
-  padding: 0.65rem;
+.btn-ghost {
+  padding: 0.5rem 0.85rem;
   background: var(--ghost-btn);
-  color: var(--muted);
-  transition: background 0.15s, color 0.15s;
-}
-
-.tabs button.active {
-  background: var(--accent-dim);
   color: var(--text);
 }
 
@@ -121,42 +75,24 @@ label {
   filter: brightness(1.08);
 }
 
-.btn-ghost {
-  padding: 0.5rem 0.85rem;
+.auth-screen .tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.auth-screen .tabs button {
+  flex: 1;
+  min-width: 100px;
+  padding: 0.65rem;
   background: var(--ghost-btn);
-  color: var(--text);
-}
-
-.rules {
   color: var(--muted);
-  font-size: 0.9rem;
+  transition: background 0.15s, color 0.15s;
 }
 
-.rules h3 {
+.auth-screen .tabs button.active {
+  background: var(--accent-dim);
   color: var(--text);
-  margin: 1rem 0 0.5rem;
-  font-size: 1rem;
-}
-
-.rules ul {
-  padding-left: 1.25rem;
-  line-height: 1.6;
-}
-
-.rules table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 0.5rem;
-}
-
-.rules td {
-  padding: 0.35rem 0.5rem;
-  border-bottom: 1px solid var(--panel-border);
-}
-
-.rules td:last-child {
-  color: var(--accent);
-  font-family: ui-monospace, monospace;
 }
 
 /* Lock scroll during gameplay (mobile browser chrome / overscroll) */
@@ -697,71 +633,18 @@ body.game-locked #root {
   padding: 1.5rem 1.25rem;
 }
 
-.welcome-screen {
-  cursor: pointer;
-  text-align: center;
+body:has(.arcade-gate) {
+  background: #000;
+}
+
+.gate-screen.arcade-gate {
+  padding: 1rem 0.75rem;
+  background: #000;
 }
 
 .welcome-inner {
   max-width: 22rem;
   width: 100%;
-}
-
-.welcome-logo {
-  width: 5.5rem;
-  height: 5.5rem;
-  margin: 0 auto 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.welcome-pac {
-  width: 4.5rem;
-  height: 4.5rem;
-  border-radius: 50%;
-  background: var(--accent);
-  display: block;
-  animation: welcome-chomp 0.55s ease-in-out infinite alternate;
-  clip-path: polygon(100% 0, 0 0, 0 100%, 100% 50%);
-}
-
-@keyframes welcome-chomp {
-  from {
-    clip-path: polygon(100% 0, 0 0, 0 100%, 100% 50%);
-  }
-  to {
-    clip-path: polygon(100% 0, 35% 15%, 35% 85%, 100% 50%);
-  }
-}
-
-.welcome-screen h1 {
-  font-size: clamp(1.75rem, 6vw, 2.25rem);
-  background: linear-gradient(135deg, #fde68a, #f59e0b);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 0.35rem;
-}
-
-.welcome-tagline {
-  color: var(--muted);
-  margin-bottom: 1.5rem;
-}
-
-.welcome-loader {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-
-.welcome-loader-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
-  border-radius: 999px;
-  transition: width 0.15s linear;
 }
 
 .welcome-hint {
@@ -804,23 +687,6 @@ body.game-locked #root {
 .btn-sm {
   padding: 0.4rem 0.65rem;
   font-size: 0.8rem;
-}
-
-.lobby-account {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 10px;
-  border: 1px solid var(--panel-border);
-}
-
-.lobby-user {
-  font-size: 0.85rem;
-  color: var(--muted);
 }
 
 .onboarding-greeting {
