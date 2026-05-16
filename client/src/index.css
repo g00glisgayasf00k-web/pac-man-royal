@@ -418,7 +418,82 @@ label {
   border-radius: 50%;
 }
 
-@media (max-width: 768px) {
+/* Mobile on-screen controls */
+.mobile-controls {
+  display: none;
+  position: fixed;
+  left: 1rem;
+  bottom: 4.5rem;
+  z-index: 50;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 3.25rem);
+  grid-template-rows: repeat(3, 3.25rem);
+  gap: 0.35rem;
+}
+
+.dpad-btn {
+  width: 3.25rem;
+  height: 3.25rem;
+  background: rgba(30, 41, 59, 0.92);
+  border: 2px solid var(--panel-border);
+  color: var(--text);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 12px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dpad-btn:active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #1a1000;
+}
+
+.dpad-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.dpad-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.dpad-down {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.dpad-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.hint-mobile {
+  display: none;
+}
+
+@media (pointer: coarse), (max-width: 768px) {
+  .mobile-controls {
+    display: block;
+  }
+
+  .hint-desktop {
+    display: none;
+  }
+
+  .hint-mobile {
+    display: inline;
+  }
+
   .play-area {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr auto;

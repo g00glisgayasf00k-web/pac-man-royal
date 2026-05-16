@@ -11,6 +11,7 @@ import { GameEngine } from '../../shared/gameEngine';
 import { GameCanvas } from './components/GameCanvas';
 import { Lobby } from './components/Lobby';
 import { OnlineWaiting } from './components/OnlineWaiting';
+import { MobileControls } from './components/MobileControls';
 import { Scoreboard } from './components/Scoreboard';
 import { useKeyboardInput } from './hooks/useInput';
 
@@ -176,6 +177,7 @@ export default function App() {
   }
 
   const waitingOnline = mode === 'online' && onlineLobby && !snapshot;
+  const controlsEnabled = screen === 'game' && !!snapshot && !waitingOnline;
 
   return (
     <div className="app game-screen">
@@ -210,9 +212,16 @@ export default function App() {
         </div>
       )}
 
+      <MobileControls enabled={controlsEnabled} onDirection={sendInput} />
+
       {!waitingOnline && (
         <footer className="hint-bar">
-          <span>Arrow keys to move • Catch Pac-Man to become him • Eat pellets for points</span>
+          <span className="hint-desktop">
+            Arrow keys to move • Catch Pac-Man to become him • Eat pellets for points
+          </span>
+          <span className="hint-mobile">
+            Use the D-pad to move • Catch Pac-Man to become him • Eat pellets for points
+          </span>
         </footer>
       )}
     </div>
