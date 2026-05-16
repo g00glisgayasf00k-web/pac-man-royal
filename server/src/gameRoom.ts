@@ -1,6 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import type { GameSnapshot, InputPayload, OnlineLobbySnapshot } from '../../shared/gameTypes.js';
 import * as Engine from '../../shared/gameEngine.js';
+import { recordGameResultForUser } from './leaderboard.js';
+import { getUserByToken } from './auth.js';
 
 const { GameEngine } = Engine;
 
@@ -14,6 +16,9 @@ export interface RoomPlayer {
   slot: number;
   isAI: boolean;
   socketId: string | null;
+  userId?: string;
+  username?: string;
+  displayName?: string;
 }
 
 export class GameRoom {
@@ -25,14 +30,27 @@ export class GameRoom {
   status: 'lobby' | 'playing' | 'ended' = 'lobby';
   autoStartAt: number | null = null;
   private autoStartTimer: ReturnType<typeof setTimeout> | null = null;
+  private resultsRecorded = false;
 
-  constructor(code: string, hostId: string, hostName: string, hostSocket: Socket) {
+  constructor(
+    code: string,
+    hostId: string,
+    hostName: string,
+    hostSocket: Socket,
+    account?: { id: string; username: string; displayName: string } | null
+  ) {
     this.code = code;
     this.hostId = hostId;
-    this.addPlayer(hostId, hostName, hostSocket, 0);
+    this.addPlayer(hostId, hostName, hostSocket, 0, account);
   }
 
-  addPlayer(socketId: string, name: string, socket: Socket | null, preferredSlot?: number): RoomPlayer | null {
+  addPlayer(
+    socketId: string,
+    name: string,
+    socket: Socket | null,
+    preferredSlot?: number,
+    account?: { id: string; username: string; displayName: string } | null
+  ): RoomPlayer | null {
     if (this.players.size >= MAX_PLAYERS) return null;
     const used = new Set([...this.players.values()].map((p) => p.slot));
     let slot = preferredSlot ?? 0;
@@ -113,6 +131,7 @@ export class GameRoom {
       .map((p) => ({ id: p.id, name: p.name, slot: p.slot, isAI: p.isAI }));
     this.engine = new GameEngine(configs);
     this.status = 'playing';
+    this.resultsRecorded = false;
 
     const snap = this.getSnapshot();
     if (snap && io) {
@@ -128,7 +147,33 @@ export class GameRoom {
   tick() {
     if (!this.engine || this.status !== 'playing') return;
     this.engine.step(1 / 60);
-    if (this.engine.status === 'ended') this.status = 'ended';
+    if (this.engine.status === 'ended') {
+      this.status = 'ended';
+      void this.recordResults();
+    }
+  }
+
+  private async recordResults() {
+    if (this.resultsRecorded || !this.engine) return;
+    this.resultsRecorded = true;
+    const snap = this.engine.getSnapshot();
+    const winnerId = snap.winnerId;
+    for (const rp of this.players.values()) {
+      if (rp.isAI || !rp.userId || !rp.username || !rp.displayName) continue;
+      const ps = snap.players.find((p) => p.id === rp.id);
+      if (!ps) continue;
+      try {
+        await recordGameResultForUser(
+          rp.userId,
+          rp.username,
+          rp.displayName,
+          ps.score,
+          rp.id === winnerId
+        );
+      } catch (err) {
+        console.error('Leaderboard record failed:', err);
+      }
+    }
   }
 
   getSnapshot(): GameSnapshot | null {
@@ -151,7 +196,8 @@ function randomRoomCode(): string {
 export function findOrCreateMatchmakingRoom(
   rooms: Map<string, GameRoom>,
   socket: Socket,
-  name: string
+  name: string,
+  account?: { id: string; username: string; displayName: string } | null
 ): { room: GameRoom; player: RoomPlayer } | { error: string } {
   let best: GameRoom | null = null;
   let bestSize = 0;
@@ -168,20 +214,21 @@ export function findOrCreateMatchmakingRoom(
 
   if (!best) {
     const code = randomRoomCode();
-    const room = new GameRoom(code, socket.id, name || 'Player', socket);
+    const room = new GameRoom(code, socket.id, name || 'Player', socket, account);
     rooms.set(code, room);
     return { room, player: room.players.get(socket.id)! };
   }
 
-  const added = best.addPlayer(socket.id, name || 'Player', socket);
+  const added = best.addPlayer(socket.id, name || 'Player', socket, undefined, account);
   if (!added) return { error: 'Could not join lobby' };
   return { room: best, player: added };
 }
 
 export function attachRoomHandlers(io: Server, rooms: Map<string, GameRoom>) {
   io.on('connection', (socket) => {
-    socket.on('quick-join', ({ name }: { name: string }, cb) => {
-      const result = findOrCreateMatchmakingRoom(rooms, socket, name);
+    socket.on('quick-join', async ({ name, token }: { name: string; token?: string }, cb) => {
+      const account = await getUserByToken(token);
+      const result = findOrCreateMatchmakingRoom(rooms, socket, name, account);
       if ('error' in result) {
         return cb({ ok: false, error: result.error });
       }

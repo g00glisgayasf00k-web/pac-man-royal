@@ -14,6 +14,8 @@ import { OnlineWaiting } from './components/OnlineWaiting';
 import { Scoreboard } from './components/Scoreboard';
 import { useKeyboardInput } from './hooks/useInput';
 import { useSwipeInput } from './hooks/useSwipeInput';
+import { recordGameResult } from './auth/api';
+import { loadSession } from './auth/session';
 import type { AuthUser } from './auth/types';
 
 const SERVER_URL =
@@ -41,6 +43,7 @@ export default function GameApp({ user, onLogout }: Props) {
   const socketRef = useRef<Socket | null>(null);
   const rafRef = useRef(0);
   const lastRef = useRef(performance.now());
+  const resultRecordedRef = useRef(false);
 
   const stopLoop = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -88,7 +91,8 @@ export default function GameApp({ user, onLogout }: Props) {
           if (snap.status === 'ended') setScreen('win');
         });
 
-        socket.emit('quick-join', { name }, (res: {
+        const token = loadSession()?.token;
+        socket.emit('quick-join', { name, token }, (res: {
           ok: boolean;
           code?: string;
           playerId?: string;
@@ -168,6 +172,24 @@ export default function GameApp({ user, onLogout }: Props) {
       socketRef.current?.disconnect();
     };
   }, [stopLoop]);
+
+  useEffect(() => {
+    if (screen !== 'win' || !snapshot || mode !== 'local') return;
+    if (resultRecordedRef.current) return;
+    const me = snapshot.players.find((p) => p.id === playerId);
+    if (!me) return;
+    resultRecordedRef.current = true;
+    const token = loadSession()?.token;
+    if (!token) return;
+    void recordGameResult(token, {
+      score: me.score,
+      won: snapshot.winnerId === playerId,
+    }).catch(() => {});
+  }, [screen, snapshot, mode, playerId]);
+
+  useEffect(() => {
+    if (screen === 'lobby') resultRecordedRef.current = false;
+  }, [screen]);
 
   const backToLobby = () => {
     stopLoop();

@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Server } from 'socket.io';
 import { authRouter } from './authRoutes.js';
+import { leaderboardRouter } from './leaderboardRoutes.js';
 import { attachRoomHandlers, GameRoom } from './gameRoom.js';
 import { initDb, useDatabase } from './db.js';
 
@@ -21,6 +22,7 @@ const rooms = new Map<string, GameRoom>();
 attachRoomHandlers(io, rooms);
 
 app.use('/api/auth', authRouter);
+app.use('/api/leaderboard', leaderboardRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, rooms: rooms.size, userStore: useDatabase() ? 'postgres' : 'file' });

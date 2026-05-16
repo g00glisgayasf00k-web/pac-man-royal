@@ -122,6 +122,86 @@
   margin-bottom: 18px;
 }
 
+.arcade-gate .overall-leaderboard {
+  margin-bottom: 18px;
+}
+
+.arcade-gate .leaderboard-status {
+  font-size: 7px;
+  color: #888;
+  text-align: center;
+  line-height: 1.8;
+  margin-bottom: 8px;
+}
+
+.arcade-gate .leaderboard-error {
+  color: #ff8888;
+}
+
+.arcade-gate .leaderboard-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.arcade-gate .leaderboard-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #0a0a2a;
+  border: 1px solid #2121de;
+  border-radius: 6px;
+  font-size: 7px;
+}
+
+.arcade-gate .leaderboard-list li.rank-1 {
+  border-color: #ffe000;
+  background: rgba(255, 224, 0, 0.08);
+}
+
+.arcade-gate .leaderboard-list li.rank-2 {
+  border-color: #c0c0c0;
+}
+
+.arcade-gate .leaderboard-list li.rank-3 {
+  border-color: #cd7f32;
+}
+
+.arcade-gate .lb-rank {
+  color: #ff8000;
+  min-width: 1.5rem;
+}
+
+.arcade-gate .lb-name {
+  color: #ffe000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arcade-gate .lb-wins {
+  color: #00ffde;
+}
+
+.arcade-gate .lb-pts {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.arcade-gate .leaderboard-foot {
+  font-size: 6px;
+  color: #666;
+  text-align: center;
+  letter-spacing: 1px;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
 .arcade-gate .section-label {
   font-size: 7px;
   color: #888;

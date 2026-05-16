@@ -46,6 +46,14 @@ export async function initDb(): Promise<void> {
       );
 
       CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions(user_id);
+
+      CREATE TABLE IF NOT EXISTS leaderboard_stats (
+        user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        wins INT NOT NULL DEFAULT 0,
+        total_points BIGINT NOT NULL DEFAULT 0,
+        games_played INT NOT NULL DEFAULT 0,
+        updated_at BIGINT NOT NULL
+      );
     `);
   } finally {
     client.release();

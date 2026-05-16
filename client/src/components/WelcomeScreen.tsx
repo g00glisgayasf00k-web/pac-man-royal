@@ -7,6 +7,7 @@ import {
   ArcadePlayers,
   ArcadeRuleCards,
 } from './arcade/ArcadeLayout';
+import { OverallLeaderboard } from './arcade/OverallLeaderboard';
 import './welcome/welcome.css';
 
 type Props = {
@@ -56,6 +57,7 @@ export function WelcomeScreen({ onDone }: Props) {
       <ArcadeHeader />
       <ArcadeRuleCards />
       <ArcadePlayers />
+      <OverallLeaderboard />
 
       <div className="target-bar">
         <span className="target-icon" aria-hidden>
