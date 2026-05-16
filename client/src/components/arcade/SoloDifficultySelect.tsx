@@ -29,9 +29,9 @@ export function SoloDifficultySelect({ difficulty, onDifficultyChange }: Props) 
       </div>
       <p className="arcade-mode-hint">
         Speed ×{soloDifficultySpeedMultiplier(difficulty)} for Pac-Man and all ghosts.
-        {difficulty === 'easy' && ' Standard pace.'}
-        {difficulty === 'medium' && ' Twice as fast as Easy.'}
-        {difficulty === 'hard' && ' Four times as fast as Easy.'}
+        {difficulty === 'easy' && ' Relaxed.'}
+        {difficulty === 'medium' && ' Fast.'}
+        {difficulty === 'hard' && ' Extreme.'}
       </p>
     </div>
   );

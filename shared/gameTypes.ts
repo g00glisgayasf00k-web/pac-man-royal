@@ -41,7 +41,7 @@ export interface OnlineLaunchOptions {
   code?: string;
 }
 
-/** Solo vs AI difficulty — each step doubles Pac-Man and ghost speed */
+/** Solo vs AI difficulty — speed multipliers applied to base MOVE_SPEED */
 export type SoloDifficulty = 'easy' | 'medium' | 'hard';
 
 export interface SoloLaunchOptions {
@@ -51,11 +51,11 @@ export interface SoloLaunchOptions {
 export function soloDifficultySpeedMultiplier(difficulty: SoloDifficulty): number {
   switch (difficulty) {
     case 'medium':
-      return 2;
+      return 8;
     case 'hard':
-      return 4;
+      return 32;
     default:
-      return 1;
+      return 2;
   }
 }
 
