@@ -188,7 +188,7 @@ export default function GameApp({ user, onLogout }: Props) {
           </p>
         )}
         <Lobby
-          defaultName={user.displayName}
+          displayName={user.displayName}
           username={user.username}
           onStart={startGame}
           onLogout={onLogout}

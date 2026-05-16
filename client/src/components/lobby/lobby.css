@@ -19,40 +19,12 @@
   font-size: 6px;
 }
 
-.lobby-gate .lobby-setup {
-  background: #0a0a2a;
-  border: 1px solid #2121de;
-  border-radius: 8px;
-  padding: 14px 16px;
-  margin-bottom: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.lobby-gate .lobby-mode {
+  margin-bottom: 18px;
 }
 
-.lobby-gate .lobby-setup label {
-  font-size: 7px;
-  color: #888;
-  letter-spacing: 1px;
-  gap: 6px;
-  display: flex;
-  flex-direction: column;
-}
-
-.lobby-gate .lobby-setup input {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  padding: 10px 12px;
-  border-radius: 4px;
-  border: 1px solid #333;
-  background: #111;
-  color: #ffe000;
-  width: 100%;
-}
-
-.lobby-gate .lobby-setup input:focus {
-  outline: none;
-  border-color: #2121de;
+.lobby-gate .lobby-mode .section-label {
+  margin-bottom: 10px;
 }
 
 .lobby-gate .lobby-mode-tabs {
@@ -89,13 +61,10 @@
   font-size: 6px;
   color: #888;
   line-height: 1.8;
+  margin-top: 10px;
 }
 
-.lobby-gate .btn-row-form {
-  margin-bottom: 0;
-}
-
-.lobby-gate .btn-play-full {
+.lobby-gate .lobby-start-row .btn-play {
   width: 100%;
-  margin-bottom: 16px;
+  flex: none;
 }
