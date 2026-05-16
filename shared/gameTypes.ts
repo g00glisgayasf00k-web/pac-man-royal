@@ -11,7 +11,7 @@ export const MAX_SIM_STEPS_PER_FRAME = 5;
 /** Scoreboard React updates per second (canvas uses full sim rate via ref) */
 export const UI_SNAPSHOT_HZ = 10;
 /** Online game-state broadcasts per second (server sim still runs at 60Hz) */
-export const NETWORK_SNAPSHOT_HZ = 20;
+export const NETWORK_SNAPSHOT_HZ = 30;
 /** Tiles per second — same for Pac-Man and ghosts */
 export const MOVE_SPEED = 2.3;
 

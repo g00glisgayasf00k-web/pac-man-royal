@@ -70,16 +70,15 @@ export function renderGame(ctx: CanvasRenderingContext2D, snap: GameSnapshot, wi
 
 function drawPellets(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
   const ts = TILE_SIZE;
+  ctx.fillStyle = PELLET_COLOR;
   for (let row = 0; row < MAZE_ROWS; row++) {
     for (let col = 0; col < MAZE_COLS; col++) {
       const cx = col * ts + ts / 2;
       const cy = row * ts + ts / 2;
       if (snap.pellets[row]?.[col]) {
-        ctx.fillStyle = PELLET_COLOR;
         ctx.fillRect(cx - 2, cy - 2, 4, 4);
       }
       if (snap.powerPellets[row]?.[col]) {
-        ctx.fillStyle = PELLET_COLOR;
         ctx.beginPath();
         ctx.arc(cx, cy, 5.5, 0, Math.PI * 2);
         ctx.fill();

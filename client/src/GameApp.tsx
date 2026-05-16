@@ -7,6 +7,7 @@ import {
   GameSnapshot,
   MAX_SIM_STEPS_PER_FRAME,
   MOVE_SPEED,
+  NETWORK_SNAPSHOT_HZ,
   OnlineLaunchOptions,
   OnlineLobbySnapshot,
   SoloLaunchOptions,
@@ -355,7 +356,7 @@ export default function GameApp({
             <GameCanvas
               snapshot={snapshot}
               liveSnapshotRef={liveSnapshotRef}
-              interpolateOnline={mode === 'online'}
+              blendHz={mode === 'online' ? NETWORK_SNAPSHOT_HZ : 60}
             />
           </div>
         )}
