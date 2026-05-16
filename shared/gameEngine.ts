@@ -115,6 +115,9 @@ export class GameEngine {
   private pelletRespawnAt: number[][] = [];
   private powerRespawnAt: number[][] = [];
   matchEndsAt = 0;
+  pelletRevision = 0;
+  private pelletSnapCache: { revision: number; pellets: boolean[][]; powerPellets: boolean[][] } | null =
+    null;
   fruit: FruitState | null = null;
   winnerId: string | null = null;
   winnerName: string | null = null;
@@ -145,12 +148,30 @@ export class GameEngine {
     this.spawnFruit();
   }
 
+  private bumpPellets() {
+    this.pelletRevision++;
+    this.pelletSnapCache = null;
+  }
+
+  private pelletArraysForSnapshot() {
+    if (!this.pelletSnapCache || this.pelletSnapCache.revision !== this.pelletRevision) {
+      this.pelletSnapCache = {
+        revision: this.pelletRevision,
+        pellets: this.pellets.map((r) => [...r]),
+        powerPellets: this.powerPellets.map((r) => [...r]),
+      };
+    }
+    return this.pelletSnapCache;
+  }
+
   getSnapshot(): GameSnapshot {
+    const pellets = this.pelletArraysForSnapshot();
     return {
       tick: this.tick,
       players: this.players.map((p) => ({ ...p })),
-      pellets: this.pellets.map((r) => [...r]),
-      powerPellets: this.powerPellets.map((r) => [...r]),
+      pellets: pellets.pellets,
+      powerPellets: pellets.powerPellets,
+      pelletRevision: this.pelletRevision,
       fruit: this.fruit ? { ...this.fruit } : null,
       ghostsReleasedAt: this.ghostsReleasedAt,
       matchEndsAt: this.matchEndsAt,
@@ -206,20 +227,24 @@ export class GameEngine {
   }
 
   private updatePelletRespawns(now: number) {
+    let changed = false;
     for (let row = 0; row < MAZE_ROWS; row++) {
       for (let col = 0; col < MAZE_COLS; col++) {
         const pelletAt = this.pelletRespawnAt[row]?.[col] ?? 0;
         if (pelletAt > 0 && now >= pelletAt) {
           this.pellets[row][col] = true;
           this.pelletRespawnAt[row][col] = 0;
+          changed = true;
         }
         const powerAt = this.powerRespawnAt[row]?.[col] ?? 0;
         if (powerAt > 0 && now >= powerAt) {
           this.powerPellets[row][col] = true;
           this.powerRespawnAt[row][col] = 0;
+          changed = true;
         }
       }
     }
+    if (changed) this.bumpPellets();
   }
 
   private updateFruit(now: number) {
@@ -248,12 +273,14 @@ export class GameEngine {
     if (isPac && this.pellets[row]?.[col]) {
       this.pellets[row][col] = false;
       this.pelletRespawnAt[row][col] = now + PELLET_RESPAWN_MS;
+      this.bumpPellets();
       p.score += PELLET_POINTS;
     }
 
     if (this.powerPellets[row]?.[col]) {
       this.powerPellets[row][col] = false;
       this.powerRespawnAt[row][col] = now + POWER_PELLET_RESPAWN_MS;
+      this.bumpPellets();
       p.score += POWER_PELLET_POINTS;
       if (isPac) {
         p.speedBoostUntil = Math.max(p.speedBoostUntil, now + POWER_SPEED_MS);

@@ -114,6 +114,8 @@ export interface GameSnapshot {
   players: PlayerState[];
   pellets: boolean[][];
   powerPellets: boolean[][];
+  /** Bumps when pellets are eaten or respawn — for render caching */
+  pelletRevision: number;
   fruit: FruitState | null;
   ghostsReleasedAt: number;
   /** Unix ms when the match ends (3-minute timer) */

@@ -19,6 +19,7 @@ export function Scoreboard({ snapshot, highlightId }: Props) {
 
   const sorted = [...snapshot.players].sort((a, b) => b.score - a.score);
   const remaining = formatMatchTimeRemaining(snapshot.matchEndsAt - now);
+  const timerLabel = snapshot.status === 'ended' ? "Time's up" : remaining;
 
   return (
     <div className="scoreboard" role="region" aria-label="Live scores">
@@ -45,8 +46,8 @@ export function Scoreboard({ snapshot, highlightId }: Props) {
         ))}
       </ol>
 
-      <p className="scoreboard-goal" aria-live="polite">
-        {snapshot.status === 'ended' ? "Time's up" : remaining} · highest score wins
+      <p className="scoreboard-timer" aria-live="polite">
+        {timerLabel}
       </p>
     </div>
   );

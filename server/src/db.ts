@@ -60,6 +60,7 @@ export async function initDb(): Promise<void> {
       ALTER TABLE leaderboard_stats ADD COLUMN IF NOT EXISTS mode TEXT NOT NULL DEFAULT 'local';
       ALTER TABLE leaderboard_stats DROP CONSTRAINT IF EXISTS leaderboard_stats_pkey;
       ALTER TABLE leaderboard_stats ADD PRIMARY KEY (user_id, mode);
+      ALTER TABLE leaderboard_stats ADD COLUMN IF NOT EXISTS best_score INT NOT NULL DEFAULT 0;
 
       CREATE TABLE IF NOT EXISTS game_results (
         id SERIAL PRIMARY KEY,
@@ -79,6 +80,15 @@ export async function initDb(): Promise<void> {
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
       );
+
+      UPDATE leaderboard_stats s
+      SET best_score = sub.max_score
+      FROM (
+        SELECT user_id, mode, MAX(score)::int AS max_score
+        FROM game_results
+        GROUP BY user_id, mode
+      ) sub
+      WHERE s.user_id = sub.user_id AND s.mode = sub.mode AND s.best_score < sub.max_score;
     `);
   } finally {
     client.release();

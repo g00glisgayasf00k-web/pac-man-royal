@@ -3,6 +3,8 @@ import { FruitKind } from '../../../shared/fruits';
 import { MAZE_COLS, MAZE_ROWS } from '../../../shared/maze';
 
 const PELLET_COLOR = '#ffb8ae';
+const MAZE_W = MAZE_COLS * TILE_SIZE;
+const MAZE_H = MAZE_ROWS * TILE_SIZE;
 
 const FRUIT_SPRITE_PATHS: Record<FruitKind, string> = {
   cherry: '/cherry.svg',
@@ -15,6 +17,10 @@ let mazeBg: HTMLImageElement | null = null;
 let bgLoadStarted = false;
 const fruitSprites: Partial<Record<FruitKind, HTMLImageElement>> = {};
 const fruitLoadStarted = new Set<FruitKind>();
+
+let pelletLayer: OffscreenCanvas | HTMLCanvasElement | null = null;
+let pelletLayerCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
+let cachedPelletRevision = -1;
 
 function getMazeBackground(): HTMLImageElement | null {
   if (mazeBg?.complete) return mazeBg;
@@ -39,9 +45,54 @@ function getFruitSprite(kind: FruitKind): HTMLImageElement | null {
   return img?.complete ? img : null;
 }
 
+function ensurePelletLayer(snap: GameSnapshot) {
+  const revision = snap.pelletRevision ?? 0;
+  if (cachedPelletRevision === revision && pelletLayer) return;
+
+  cachedPelletRevision = revision;
+  if (!pelletLayer) {
+    pelletLayer =
+      typeof OffscreenCanvas !== 'undefined'
+        ? new OffscreenCanvas(MAZE_W, MAZE_H)
+        : document.createElement('canvas');
+    pelletLayer.width = MAZE_W;
+    pelletLayer.height = MAZE_H;
+    pelletLayerCtx = pelletLayer.getContext('2d');
+  }
+  const layer = pelletLayerCtx;
+  if (!layer) return;
+
+  layer.clearRect(0, 0, MAZE_W, MAZE_H);
+  const ts = TILE_SIZE;
+  layer.fillStyle = PELLET_COLOR;
+
+  for (let row = 0; row < MAZE_ROWS; row++) {
+    for (let col = 0; col < MAZE_COLS; col++) {
+      const cx = col * ts + ts / 2;
+      const cy = row * ts + ts / 2;
+      if (snap.pellets[row]?.[col]) {
+        layer.fillRect(cx - 2, cy - 2, 4, 4);
+      }
+    }
+  }
+
+  layer.beginPath();
+  for (let row = 0; row < MAZE_ROWS; row++) {
+    for (let col = 0; col < MAZE_COLS; col++) {
+      if (snap.powerPellets[row]?.[col]) {
+        const cx = col * ts + ts / 2;
+        const cy = row * ts + ts / 2;
+        layer.moveTo(cx + 5.5, cy);
+        layer.arc(cx, cy, 5.5, 0, Math.PI * 2);
+      }
+    }
+  }
+  layer.fill();
+}
+
 export function renderGame(ctx: CanvasRenderingContext2D, snap: GameSnapshot, width: number, height: number) {
-  const canvasW = MAZE_COLS * TILE_SIZE;
-  const canvasH = MAZE_ROWS * TILE_SIZE;
+  const canvasW = MAZE_W;
+  const canvasH = MAZE_H;
   const scale = Math.min(width / canvasW, height / canvasH) * 0.98;
   const offsetX = (width - canvasW * scale) / 2;
   const offsetY = (height - canvasH * scale) / 2;
@@ -61,30 +112,15 @@ export function renderGame(ctx: CanvasRenderingContext2D, snap: GameSnapshot, wi
     ctx.fillRect(0, 0, canvasW, canvasH);
   }
 
-  drawPellets(ctx, snap);
+  ensurePelletLayer(snap);
+  if (pelletLayer) {
+    ctx.drawImage(pelletLayer as CanvasImageSource, 0, 0);
+  }
+
   drawFruit(ctx, snap);
   drawPlayers(ctx, snap);
 
   ctx.restore();
-}
-
-function drawPellets(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
-  const ts = TILE_SIZE;
-  ctx.fillStyle = PELLET_COLOR;
-  for (let row = 0; row < MAZE_ROWS; row++) {
-    for (let col = 0; col < MAZE_COLS; col++) {
-      const cx = col * ts + ts / 2;
-      const cy = row * ts + ts / 2;
-      if (snap.pellets[row]?.[col]) {
-        ctx.fillRect(cx - 2, cy - 2, 4, 4);
-      }
-      if (snap.powerPellets[row]?.[col]) {
-        ctx.beginPath();
-        ctx.arc(cx, cy, 5.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  }
 }
 
 function drawFruit(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {

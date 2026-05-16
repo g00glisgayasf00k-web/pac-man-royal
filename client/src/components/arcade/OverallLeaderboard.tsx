@@ -58,13 +58,18 @@ export function OverallLeaderboard({ mode, title, limit = 5, className = '' }: P
                 {entry.displayName}
               </span>
               <span className="lb-wins">{entry.wins}W</span>
-              <span className="lb-pts">{entry.totalPoints.toLocaleString()}</span>
+              <span className="lb-best" title="Best single match">
+                {entry.bestScore.toLocaleString()}
+              </span>
+              <span className="lb-pts" title="Total points all matches">
+                {entry.totalPoints.toLocaleString()}
+              </span>
             </li>
           ))}
         </ol>
       )}
 
-      <p className="leaderboard-foot">WINS · PTS</p>
+      <p className="leaderboard-foot">WINS · BEST · TOTAL</p>
     </section>
   );
 }

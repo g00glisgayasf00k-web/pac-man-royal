@@ -16,6 +16,7 @@ interface StatsRecord {
   username: string;
   displayName: string;
   wins: number;
+  bestScore: number;
   totalPoints: number;
   gamesPlayed: number;
   updatedAt: number;
@@ -48,15 +49,12 @@ async function loadFileStore() {
     const parsed = JSON.parse(raw) as LeaderboardStore;
     store = { entries: {} };
     for (const [key, row] of Object.entries(parsed.entries ?? {})) {
-      if (row.mode) {
-        store.entries[storeKey(row.userId, row.mode)] = row;
-      } else {
-        const legacy = row as StatsRecord & { mode?: LeaderboardMode };
-        store.entries[storeKey(legacy.userId, 'local')] = {
-          ...legacy,
-          mode: 'local',
-        };
-      }
+      const normalized: StatsRecord = {
+        ...row,
+        mode: row.mode ?? 'local',
+        bestScore: row.bestScore ?? 0,
+      };
+      store.entries[storeKey(normalized.userId, normalized.mode)] = normalized;
     }
   } catch {
     store = { entries: {} };
@@ -72,13 +70,17 @@ async function saveFileStore() {
 
 function toEntries(rows: StatsRecord[]): LeaderboardEntry[] {
   return rows
-    .sort((a, b) => b.wins - a.wins || b.totalPoints - a.totalPoints)
+    .sort(
+      (a, b) =>
+        b.wins - a.wins || b.bestScore - a.bestScore || b.totalPoints - a.totalPoints
+    )
     .slice(0, 50)
     .map((row, i) => ({
       rank: i + 1,
       username: row.username,
       displayName: row.displayName,
       wins: row.wins,
+      bestScore: row.bestScore,
       totalPoints: row.totalPoints,
       gamesPlayed: row.gamesPlayed,
     }));
@@ -109,14 +111,15 @@ export async function getLeaderboard(
       username: string;
       display_name: string;
       wins: number;
+      best_score: number;
       total_points: string;
       games_played: number;
     }>(
-      `SELECT u.username, u.display_name, s.wins, s.total_points, s.games_played
+      `SELECT u.username, u.display_name, s.wins, s.best_score, s.total_points, s.games_played
        FROM leaderboard_stats s
        JOIN users u ON u.id = s.user_id
        WHERE s.mode = $1
-       ORDER BY s.wins DESC, s.total_points DESC
+       ORDER BY s.wins DESC, s.best_score DESC, s.total_points DESC
        LIMIT $2`,
       [mode, cap]
     );
@@ -125,6 +128,7 @@ export async function getLeaderboard(
       username: row.username,
       displayName: row.display_name,
       wins: row.wins,
+      bestScore: row.best_score,
       totalPoints: Number(row.total_points),
       gamesPlayed: row.games_played,
     }));
@@ -160,10 +164,11 @@ export async function recordGameResultForUser(
 
   if (useDatabase()) {
     await getPool().query(
-      `INSERT INTO leaderboard_stats (user_id, mode, wins, total_points, games_played, updated_at)
-       VALUES ($1, $2, $3, $4, 1, $5)
+      `INSERT INTO leaderboard_stats (user_id, mode, wins, best_score, total_points, games_played, updated_at)
+       VALUES ($1, $2, $3, $4, $4, 1, $5)
        ON CONFLICT (user_id, mode) DO UPDATE SET
          wins = leaderboard_stats.wins + EXCLUDED.wins,
+         best_score = GREATEST(leaderboard_stats.best_score, EXCLUDED.best_score),
          total_points = leaderboard_stats.total_points + EXCLUDED.total_points,
          games_played = leaderboard_stats.games_played + 1,
          updated_at = EXCLUDED.updated_at`,
@@ -176,12 +181,14 @@ export async function recordGameResultForUser(
   await loadFileStore();
   const key = storeKey(userId, gameMode);
   const existing = store.entries[key];
+  const prevBest = existing?.bestScore ?? 0;
   store.entries[key] = {
     userId,
     mode: gameMode,
     username,
     displayName,
     wins: (existing?.wins ?? 0) + (won ? 1 : 0),
+    bestScore: Math.max(prevBest, pts),
     totalPoints: (existing?.totalPoints ?? 0) + pts,
     gamesPlayed: (existing?.gamesPlayed ?? 0) + 1,
     updatedAt: now,
