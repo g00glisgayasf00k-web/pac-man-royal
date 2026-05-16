@@ -48,6 +48,10 @@ export async function fetchAdminLiveRooms(token: string): Promise<AdminLiveRooms
   return request<AdminLiveRoomsResponse>('/api/admin/rooms', token);
 }
 
+export async function resetAdminLeaderboard(token: string): Promise<void> {
+  await request<{ ok: boolean }>('/api/admin/leaderboard/reset', token, { method: 'POST' });
+}
+
 export async function deleteAdminUser(token: string, userId: string): Promise<void> {
   await request<{ ok: boolean }>(`/api/admin/users/${encodeURIComponent(userId)}`, token, {
     method: 'DELETE',

@@ -74,6 +74,11 @@ export async function initDb(): Promise<void> {
 
       CREATE INDEX IF NOT EXISTS game_results_played_at_idx ON game_results(played_at DESC);
       CREATE INDEX IF NOT EXISTS game_results_mode_idx ON game_results(mode);
+
+      CREATE TABLE IF NOT EXISTS app_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
     `);
   } finally {
     client.release();

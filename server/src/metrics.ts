@@ -62,6 +62,17 @@ async function saveFileResults() {
   await fs.writeFile(GAME_RESULTS_FILE, JSON.stringify(fileResults, null, 2), 'utf8');
 }
 
+/** Wipe match history (used when scoring rules change) */
+export async function resetGameResults(): Promise<void> {
+  if (useDatabase()) {
+    await getPool().query('DELETE FROM game_results');
+    return;
+  }
+  fileResults = { results: [] };
+  fileResultsLoaded = true;
+  await saveFileResults();
+}
+
 export async function logGameResult(
   userId: string,
   username: string,

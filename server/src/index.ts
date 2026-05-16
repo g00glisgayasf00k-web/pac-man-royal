@@ -10,6 +10,7 @@ import { authRouter } from './authRoutes.js';
 import { leaderboardRouter } from './leaderboardRoutes.js';
 import { attachRoomHandlers, GameRoom } from './gameRoom.js';
 import { initDb, useDatabase } from './db.js';
+import { applyLeaderboardEpochIfNeeded } from './leaderboardEpoch.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3001;
@@ -42,6 +43,10 @@ app.get('*', (_req, res) => {
 async function start() {
   try {
     await initDb();
+    const reset = await applyLeaderboardEpochIfNeeded();
+    if (reset) {
+      console.log('Leaderboard and match history cleared for new 3-minute scoring.');
+    }
     if (useDatabase()) {
       console.log('User accounts: PostgreSQL (persists across deploys)');
     } else {

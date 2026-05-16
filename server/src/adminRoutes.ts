@@ -5,6 +5,7 @@ import { deleteAdminUser, listAdminUsers } from './adminUsers.js';
 import { getUserByToken } from './auth.js';
 import type { GameRoom } from './gameRoom.js';
 import { getAdminLiveRooms } from './gameRoom.js';
+import { resetLeaderboardData } from './leaderboard.js';
 import { getAdminMetrics } from './metrics.js';
 
 type AdminRequest = Request & { adminUser?: PublicUser };
@@ -63,6 +64,15 @@ export function createAdminRouter(rooms: Map<string, GameRoom>) {
 
   router.get('/rooms', requireAdmin, (_req, res) => {
     res.json(getAdminLiveRooms(rooms));
+  });
+
+  router.post('/leaderboard/reset', requireAdmin, async (_req, res) => {
+    try {
+      await resetLeaderboardData();
+      res.json({ ok: true });
+    } catch (e) {
+      res.status(500).json({ error: e instanceof Error ? e.message : 'Reset failed' });
+    }
   });
 
   router.delete('/users/:userId', requireAdmin, async (req: AdminRequest, res) => {

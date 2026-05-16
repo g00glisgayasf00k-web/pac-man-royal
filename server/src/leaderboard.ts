@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import type { LeaderboardEntry, LeaderboardMode } from '../../shared/leaderboardTypes.js';
 import { getUserByToken } from './auth.js';
 import { useDatabase, getPool } from './db.js';
-import { logGameResult } from './metrics.js';
+import { logGameResult, resetGameResults } from './metrics.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, '../data');
@@ -82,6 +82,20 @@ function toEntries(rows: StatsRecord[]): LeaderboardEntry[] {
       totalPoints: row.totalPoints,
       gamesPlayed: row.gamesPlayed,
     }));
+}
+
+/** Clear all wins/points and per-game history (scores from old 1000-pt rules, etc.) */
+export async function resetLeaderboardData(): Promise<void> {
+  if (useDatabase()) {
+    await getPool().query('DELETE FROM leaderboard_stats');
+    await resetGameResults();
+    return;
+  }
+
+  store = { entries: {} };
+  fileLoaded = true;
+  await saveFileStore();
+  await resetGameResults();
 }
 
 export async function getLeaderboard(

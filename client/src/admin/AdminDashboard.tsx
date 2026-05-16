@@ -6,6 +6,7 @@ import type {
 } from '../../../shared/adminTypes';
 import {
   deleteAdminUser,
+  resetAdminLeaderboard,
   fetchAdminLiveRooms,
   fetchAdminMetrics,
   fetchAdminUsers,
@@ -70,6 +71,7 @@ export function AdminDashboard({ token }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [resettingLeaderboard, setResettingLeaderboard] = useState(false);
 
   const loadMetrics = useCallback(async () => {
     const data = await fetchAdminMetrics(token);
@@ -114,6 +116,23 @@ export function AdminDashboard({ token }: Props) {
     return () => clearTimeout(id);
   }, [search, loadUsers]);
 
+  const handleResetLeaderboard = async () => {
+    const ok = window.confirm(
+      'Clear all leaderboard wins, points, and match history?\n\nUse this after scoring rule changes. This cannot be undone.'
+    );
+    if (!ok) return;
+    setResettingLeaderboard(true);
+    setError(null);
+    try {
+      await resetAdminLeaderboard(token);
+      await refreshAll();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Leaderboard reset failed');
+    } finally {
+      setResettingLeaderboard(false);
+    }
+  };
+
   const handleDelete = async (user: AdminUser) => {
     if (user.isAdmin) return;
     const ok = window.confirm(
@@ -157,6 +176,14 @@ export function AdminDashboard({ token }: Props) {
           </span>
           <button type="button" className="admin-btn" onClick={() => void refreshAll()} disabled={loading}>
             Refresh
+          </button>
+          <button
+            type="button"
+            className="admin-btn admin-btn-danger"
+            onClick={() => void handleResetLeaderboard()}
+            disabled={loading || resettingLeaderboard}
+          >
+            {resettingLeaderboard ? 'Clearing…' : 'Reset scores'}
           </button>
           <a href="/" className="admin-btn admin-btn-ghost">
             Back to game
