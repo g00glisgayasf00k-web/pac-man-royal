@@ -55,9 +55,6 @@ export function WelcomeScreen({ onDone }: Props) {
   return (
     <ArcadeGate className="welcome-gate">
       <ArcadeHeader />
-      <ArcadeRuleCards />
-      <ArcadePlayers />
-      <OverallLeaderboard />
 
       <div className="target-bar">
         <span className="target-icon" aria-hidden>
@@ -88,6 +85,10 @@ export function WelcomeScreen({ onDone }: Props) {
           ▶ START GAME
         </button>
       </div>
+
+      <ArcadePlayers />
+      <OverallLeaderboard />
+      <ArcadeRuleCards />
 
       <ArcadeFooter />
     </ArcadeGate>

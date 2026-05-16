@@ -4,9 +4,11 @@ import { renderGame } from '../game/renderer';
 
 interface Props {
   snapshot: GameSnapshot | null;
+  /** Latest sim state — updated every physics step without waiting on React */
+  liveSnapshotRef?: React.RefObject<GameSnapshot | null>;
 }
 
-export function GameCanvas({ snapshot }: Props) {
+export function GameCanvas({ snapshot, liveSnapshotRef }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const snapRef = useRef(snapshot);
   snapRef.current = snapshot;
@@ -28,12 +30,13 @@ export function GameCanvas({ snapshot }: Props) {
         canvas.height = h;
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (snapRef.current) renderGame(ctx, snapRef.current, rect.width, rect.height);
+      const snap = liveSnapshotRef?.current ?? snapRef.current;
+      if (snap) renderGame(ctx, snap, rect.width, rect.height);
       raf = requestAnimationFrame(draw);
     };
     draw();
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [liveSnapshotRef]);
 
   return <canvas ref={canvasRef} className="game-canvas" aria-label="Pac-Man Battle Royale game board" />;
 }

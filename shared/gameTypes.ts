@@ -5,6 +5,11 @@ export const PELLET_POINTS = 10;
 export const POWER_PELLET_POINTS = 50;
 export const TILE_SIZE = 16;
 export const TICK_MS = 1000 / 60;
+/** Fixed simulation step (seconds) — decoupled from display refresh rate */
+export const FIXED_DT = 1 / 60;
+export const MAX_SIM_STEPS_PER_FRAME = 5;
+/** Scoreboard React updates per second (canvas uses full sim rate via ref) */
+export const UI_SNAPSHOT_HZ = 10;
 /** Tiles per second — same for Pac-Man and ghosts */
 export const MOVE_SPEED = 2.3;
 

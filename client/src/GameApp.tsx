@@ -2,9 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import {
   Direction,
+  FIXED_DT,
   GameMode,
   GameSnapshot,
+  MAX_SIM_STEPS_PER_FRAME,
   OnlineLobbySnapshot,
+  UI_SNAPSHOT_HZ,
   WIN_SCORE,
 } from '../../shared/gameTypes';
 import { GameEngine } from '../../shared/gameEngine';
@@ -42,33 +45,64 @@ export default function GameApp({ user, onLogout }: Props) {
   const engineRef = useRef<GameEngine | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const rafRef = useRef(0);
-  const lastRef = useRef(performance.now());
+  const simAccumRef = useRef(0);
+  const uiAccumRef = useRef(0);
+  const liveSnapshotRef = useRef<GameSnapshot | null>(null);
   const resultRecordedRef = useRef(false);
+
+  const UI_DT = 1 / UI_SNAPSHOT_HZ;
 
   const stopLoop = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = 0;
   }, []);
 
+  const pushUiSnapshot = useCallback((snap: GameSnapshot) => {
+    liveSnapshotRef.current = snap;
+    setSnapshot(snap);
+  }, []);
+
   const startLocalLoop = useCallback(() => {
     stopLoop();
+    let last = performance.now();
+    simAccumRef.current = 0;
+    uiAccumRef.current = 0;
+
     const loop = (now: number) => {
       const engine = engineRef.current;
       if (!engine) return;
-      lastRef.current = now;
-      engine.step(1 / 60);
+
+      let frameDt = (now - last) / 1000;
+      last = now;
+      if (frameDt > 0.25) frameDt = 0.25;
+
+      simAccumRef.current += frameDt;
+      let steps = 0;
+      while (simAccumRef.current >= FIXED_DT && steps < MAX_SIM_STEPS_PER_FRAME) {
+        engine.step(FIXED_DT);
+        simAccumRef.current -= FIXED_DT;
+        steps++;
+      }
+
       const snap = engine.getSnapshot();
-      setSnapshot(snap);
+      liveSnapshotRef.current = snap;
+
+      uiAccumRef.current += frameDt;
+      if (uiAccumRef.current >= UI_DT) {
+        uiAccumRef.current = 0;
+        setSnapshot(snap);
+      }
+
       if (snap.status === 'ended') {
+        pushUiSnapshot(snap);
         setScreen('win');
         stopLoop();
         return;
       }
       rafRef.current = requestAnimationFrame(loop);
     };
-    lastRef.current = performance.now();
     rafRef.current = requestAnimationFrame(loop);
-  }, [stopLoop]);
+  }, [stopLoop, pushUiSnapshot, UI_DT]);
 
   const startGame = useCallback(
     (gameMode: GameMode, name: string) => {
@@ -85,9 +119,24 @@ export default function GameApp({ user, onLogout }: Props) {
           setOnlineStatus(`${humans}/${lobby.maxPlayers} players`);
         });
 
+        let onlineUiAccum = 0;
+        let onlineLast = performance.now();
+
         socket.on('game-state', (snap: GameSnapshot) => {
-          setSnapshot(snap);
+          liveSnapshotRef.current = snap;
           setOnlineLobby(null);
+
+          const now = performance.now();
+          let frameDt = (now - onlineLast) / 1000;
+          onlineLast = now;
+          if (frameDt > 0.25) frameDt = 0.25;
+          onlineUiAccum += frameDt;
+
+          if (snap.status === 'ended' || onlineUiAccum >= UI_DT) {
+            onlineUiAccum = 0;
+            setSnapshot(snap);
+          }
+
           if (snap.status === 'ended') setScreen('win');
         });
 
@@ -128,7 +177,9 @@ export default function GameApp({ user, onLogout }: Props) {
       setPlayerId(configs[0].id);
       setPlayerSlot(0);
       engineRef.current = new GameEngine(configs);
-      setSnapshot(engineRef.current.getSnapshot());
+      const initial = engineRef.current.getSnapshot();
+      liveSnapshotRef.current = initial;
+      setSnapshot(initial);
       setScreen('game');
       startLocalLoop();
     },
@@ -196,6 +247,7 @@ export default function GameApp({ user, onLogout }: Props) {
     socketRef.current?.disconnect();
     socketRef.current = null;
     engineRef.current = null;
+    liveSnapshotRef.current = null;
     setSnapshot(null);
     setOnlineLobby(null);
     setRoomCode('');
@@ -244,7 +296,7 @@ export default function GameApp({ user, onLogout }: Props) {
             className={`game-stage${controlsEnabled ? ' swipe-input' : ''}`}
             {...swipeHandlers}
           >
-            <GameCanvas snapshot={snapshot} />
+            <GameCanvas snapshot={snapshot} liveSnapshotRef={liveSnapshotRef} />
           </div>
         )}
       </main>

@@ -1,5 +1,11 @@
 import { Server, Socket } from 'socket.io';
-import type { GameSnapshot, InputPayload, OnlineLobbySnapshot } from '../../shared/gameTypes.js';
+import {
+  FIXED_DT,
+  MAX_SIM_STEPS_PER_FRAME,
+  type GameSnapshot,
+  type InputPayload,
+  type OnlineLobbySnapshot,
+} from '../../shared/gameTypes.js';
 import * as Engine from '../../shared/gameEngine.js';
 import { recordGameResultForUser } from './leaderboard.js';
 import { getUserByToken } from './auth.js';
@@ -146,7 +152,7 @@ export class GameRoom {
 
   tick() {
     if (!this.engine || this.status !== 'playing') return;
-    this.engine.step(1 / 60);
+    this.engine.step(FIXED_DT);
     if (this.engine.status === 'ended') {
       this.status = 'ended';
       void this.recordResults();
@@ -269,14 +275,31 @@ export function attachRoomHandlers(io: Server, rooms: Map<string, GameRoom>) {
     });
   });
 
+  let simAccum = 0;
+  let lastTick = performance.now();
+
   setInterval(() => {
+    const now = performance.now();
+    let elapsed = (now - lastTick) / 1000;
+    lastTick = now;
+    if (elapsed > 0.25) elapsed = 0.25;
+    simAccum += elapsed;
+
+    let steps = 0;
+    while (simAccum >= FIXED_DT && steps < MAX_SIM_STEPS_PER_FRAME) {
+      for (const [, room] of rooms) {
+        if (room.status === 'playing' && room.engine) room.tick();
+      }
+      simAccum -= FIXED_DT;
+      steps++;
+    }
+
     for (const [code, room] of rooms) {
       if (room.status !== 'playing' || !room.engine) continue;
-      room.tick();
       const snap = room.getSnapshot();
       if (snap) io.to(code).emit('game-state', snap);
     }
-  }, 1000 / 60);
+  }, 8);
 }
 
 function getLobbyState(room: GameRoom): OnlineLobbySnapshot {
