@@ -16,9 +16,9 @@ export const MAZE_LAYOUT: string[] = [
   '|.||||.||.||||||||.||.||||.|',
   ' ......||....||....||...... ',
   '||||||.||||| || |||||.||||||',
-  '_____|.||||| || |||||.|_____',
-  '_____|.||          ||.|_____',
-  '_____|.|| |||--||| ||.|_____',
+  '      .||||| || |||||.      ',
+  '      .||          ||.      ',
+  '      .|| |||--||| ||.      ',
   '||||||.|| |______| ||.||||||',
   '      .   |______|   .      ',
   '||||||.|| |______| ||.||||||',
@@ -87,10 +87,16 @@ export function isWalkable(col: number, row: number): boolean {
   return t === ' ' || t === '.' || t === 'o' || t === '-';
 }
 
+/** Rows with classic left/right side tunnels (wrap across the maze) */
+export const TUNNEL_ROWS = new Set([
+  4, 8, 11, 15, 17, 19, 20, 21, 23, 29, 32,
+]);
+
 /** Horizontal side tunnels (wrap left edge to right edge) */
 export function isTunnelRow(row: number): boolean {
   if (row < 0 || row >= MAZE_ROWS) return false;
-  return isWalkable(1, row) && isWalkable(MAZE_COLS - 2, row);
+  if (TUNNEL_ROWS.has(row)) return true;
+  return isWalkable(0, row) && isWalkable(MAZE_COLS - 1, row);
 }
 
 export function wrapCol(col: number, row: number): number {

@@ -414,8 +414,8 @@ export class GameEngine {
 
     const tunnelRow = Math.floor(ny);
     if (isTunnelRow(tunnelRow) && dx !== 0) {
-      if (nx < 0) nx += MAZE_COLS;
-      else if (nx >= MAZE_COLS) nx -= MAZE_COLS;
+      while (nx < 0) nx += MAZE_COLS;
+      while (nx >= MAZE_COLS) nx -= MAZE_COLS;
     }
 
     if (this.wouldHitWall(p.x, p.y, p.dir)) {
@@ -430,9 +430,15 @@ export class GameEngine {
 
     const { col, row } = worldToTile(p.x, p.y);
     if (isWall(col, row)) {
-      const c = tileCenter(col, row);
-      p.x = c.x;
-      p.y = c.y;
+      if (isTunnelRow(row) && p.dir === 'left' && col <= 0) {
+        p.x = MAZE_COLS - 1 + (p.x - Math.floor(p.x));
+      } else if (isTunnelRow(row) && p.dir === 'right' && col >= MAZE_COLS - 1) {
+        p.x = p.x - MAZE_COLS;
+      } else {
+        const c = tileCenter(col, row);
+        p.x = c.x;
+        p.y = c.y;
+      }
     }
   }
 
