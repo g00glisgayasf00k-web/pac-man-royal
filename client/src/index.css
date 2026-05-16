@@ -159,11 +159,31 @@ label {
   font-family: ui-monospace, monospace;
 }
 
+/* Lock scroll during gameplay (mobile browser chrome / overscroll) */
+html.game-locked,
+body.game-locked {
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  overscroll-behavior: none;
+}
+
+body.game-locked #root {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* Game screen */
 .app.game-screen {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 .top-bar {
@@ -203,6 +223,7 @@ label {
   height: 100%;
   min-height: 400px;
   display: block;
+  touch-action: none;
 }
 
 .scoreboard {
@@ -422,12 +443,14 @@ label {
 .mobile-controls {
   display: none;
   position: fixed;
-  left: 1rem;
-  bottom: 4.5rem;
+  left: 50%;
+  bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
+  transform: translateX(-50%);
   z-index: 50;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
+  pointer-events: auto;
 }
 
 .dpad {
@@ -482,6 +505,11 @@ label {
 }
 
 @media (pointer: coarse), (max-width: 768px) {
+  .app.game-screen {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
   .mobile-controls {
     display: block;
   }
@@ -491,17 +519,53 @@ label {
   }
 
   .hint-mobile {
-    display: inline;
+    display: none;
+  }
+
+  .hint-bar {
+    display: none;
+  }
+
+  .top-bar {
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .top-bar h1 {
+    font-size: 0.95rem;
   }
 
   .play-area {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    grid-template-rows: none;
+    padding-bottom: 11rem;
+  }
+
+  .game-canvas {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
   }
 
   .scoreboard {
+    flex-shrink: 0;
     border-left: none;
     border-top: 1px solid var(--panel-border);
-    max-height: 180px;
+    max-height: 28vh;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .scoreboard h2 {
+    font-size: 0.85rem;
+  }
+
+  .scoreboard li {
+    padding: 0.35rem;
+    font-size: 0.75rem;
   }
 }

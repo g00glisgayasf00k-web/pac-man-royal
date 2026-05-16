@@ -144,6 +144,16 @@ export default function App() {
   useKeyboardInput(screen !== 'lobby' && !!snapshot, playerSlot, sendInput);
 
   useEffect(() => {
+    const lock = screen === 'game';
+    document.documentElement.classList.toggle('game-locked', lock);
+    document.body.classList.toggle('game-locked', lock);
+    return () => {
+      document.documentElement.classList.remove('game-locked');
+      document.body.classList.remove('game-locked');
+    };
+  }, [screen]);
+
+  useEffect(() => {
     return () => {
       stopLoop();
       socketRef.current?.disconnect();
