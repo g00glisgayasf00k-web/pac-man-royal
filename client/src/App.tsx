@@ -204,7 +204,9 @@ export default function App() {
           <OnlineWaiting lobby={onlineLobby} />
         ) : (
           <>
-            <GameCanvas snapshot={snapshot} />
+            <div className="game-stage">
+              <GameCanvas snapshot={snapshot} />
+            </div>
             <Scoreboard snapshot={snapshot} highlightId={playerId} />
           </>
         )}
