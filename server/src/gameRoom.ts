@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
-import type { GameSnapshot, InputPayload, OnlineLobbySnapshot } from '../../shared/gameTypes.ts';
-import * as Engine from '../../shared/gameEngine.ts';
+import type { GameSnapshot, InputPayload, OnlineLobbySnapshot } from '../../shared/gameTypes.js';
+import * as Engine from '../../shared/gameEngine.js';
 
 const { GameEngine } = Engine;
 

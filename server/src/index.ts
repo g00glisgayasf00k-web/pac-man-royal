@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Server } from 'socket.io';
-import { attachRoomHandlers, GameRoom } from './gameRoom.ts';
+import { attachRoomHandlers, GameRoom } from './gameRoom.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3001;
