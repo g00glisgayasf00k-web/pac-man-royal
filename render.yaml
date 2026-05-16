@@ -13,7 +13,7 @@ services:
           name: pac-man-royal-db
           property: connectionString
       - key: ADMIN_USERNAMES
-        value: g00gl
+        value: S90LSY
 
 databases:
   - name: pac-man-royal-db
