@@ -44,8 +44,8 @@ export const MAZE_LAYOUT: string[] = [
 export const MAZE_ROWS = MAZE_LAYOUT.length;
 export const MAZE_COLS = MAZE_LAYOUT[0].length;
 
-/** Ghost-pen floor inside the house (above the gate, not the strip below the cage) */
-export const BATTLE_CENTER_SPAWN = { col: 14, row: 14 };
+/** Central box floor — row with open space inside `|______|` */
+export const BATTLE_CENTER_SPAWN = { col: 14, row: 20 };
 
 /** First walkable tile on the path out of the pen (up the left exit lane) */
 export const GHOST_PEN_EXIT_TILE = { col: 9, row: 11 };
@@ -62,8 +62,8 @@ export const BATTLE_START_OFFSETS: { dx: number; dy: number }[] = [
 /** Classic spawn positions (tile coordinates) */
 export const CLASSIC_SPAWNS: { col: number; row: number }[] = [
   { col: 14, row: 33 }, // Pac-Man start (bottom corridor)
-  { col: 14, row: 14 }, // Blinky (above ghost house)
-  { col: 14, row: 14 }, // Pinky (ghost pen floor)
+  { col: 14, row: 20 }, // Blinky (ghost box)
+  { col: 14, row: 20 }, // Pinky (ghost box)
   { col: 12, row: 17 }, // Inky
   { col: 16, row: 17 }, // Clyde
 ];
@@ -132,11 +132,11 @@ export function worldToTile(x: number, y: number): { col: number; row: number } 
   return { col: Math.floor(x), row: Math.floor(y) };
 }
 
-/** True inside the ghost house or its exit lanes (not the corridor below the cage) */
+/** True inside the central box, gate, or side exit lanes */
 export function isGhostPenArea(col: number, row: number): boolean {
-  if (row === 14 && col >= 10 && col <= 17) return true;
-  if (row === 15 && (col === 13 || col === 14 || col === 18)) return true;
-  if ((col === 9 || col === 18) && row >= 11 && row <= 21) return true;
+  if (row === BATTLE_CENTER_SPAWN.row && col >= 9 && col <= 17) return true;
+  if (row === BATTLE_CENTER_SPAWN.row + 1 && col >= 13 && col <= 15 && isGate(col, row)) return true;
+  if ((col === 9 || col === 18) && row >= 11 && row <= BATTLE_CENTER_SPAWN.row + 1) return true;
   return false;
 }
 
