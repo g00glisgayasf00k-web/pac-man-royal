@@ -68,13 +68,22 @@ export const CLASSIC_SPAWNS: { col: number; row: number }[] = [
   { col: 16, row: 17 }, // Clyde
 ];
 
-/** Side tunnel row — `......||....||....||......` (middle corridor, not bottom) */
-export const TUNNEL_ROW = 17;
-export const TUNNEL_LEFT_MIN = 1;
+/** Side tunnel row — `......||....||....||......` (middle corridor) */
+export const TUNNEL_ROW = 11;
+export const TUNNEL_LEFT_MIN = 0;
 export const TUNNEL_LEFT_MAX = 6;
 export const TUNNEL_RIGHT_MIN = 21;
 export const TUNNEL_RIGHT_MAX = 26;
 const TUNNEL_WRAP_DELTA = TUNNEL_RIGHT_MAX - TUNNEL_LEFT_MIN + 1;
+
+/** Rows with a wall lip directly above/below the tunnel — AI must step onto row 11 first */
+export function isTunnelApproachRow(row: number): boolean {
+  return row === TUNNEL_ROW - 1 || row === TUNNEL_ROW + 1;
+}
+
+export function isTunnelMouthColumn(col: number): boolean {
+  return col >= TUNNEL_LEFT_MIN && col <= TUNNEL_RIGHT_MAX;
+}
 
 export function tileAt(col: number, row: number): string {
   if (row < 0 || row >= MAZE_ROWS || col < 0 || col >= MAZE_COLS) return '_';
@@ -105,6 +114,14 @@ export function wrapCol(col: number, row: number): number {
   if (col < TUNNEL_LEFT_MIN) return col + TUNNEL_WRAP_DELTA;
   if (col > TUNNEL_RIGHT_MAX) return col - TUNNEL_WRAP_DELTA;
   return col;
+}
+
+/** Snap a target column to the nearest walkable tunnel-mouth column on the tunnel row */
+export function nearestTunnelMouthCol(col: number): number {
+  if (col <= (TUNNEL_LEFT_MAX + TUNNEL_RIGHT_MIN) / 2) {
+    return Math.max(TUNNEL_LEFT_MIN, Math.min(col, TUNNEL_LEFT_MAX));
+  }
+  return Math.max(TUNNEL_RIGHT_MIN, Math.min(col, TUNNEL_RIGHT_MAX));
 }
 
 /** Wrap world X on the tunnel row (continuous position) */

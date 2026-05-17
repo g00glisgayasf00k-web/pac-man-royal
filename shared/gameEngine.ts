@@ -31,9 +31,11 @@ import {
 } from './ai';
 import {
   getBattleStartPosition,
+  isTunnelApproachRow,
   isTunnelRow,
   isWalkable,
   isWall,
+  TUNNEL_ROW,
   MAZE_COLS,
   wrapCol,
   wrapWorldX,
@@ -443,10 +445,28 @@ export class GameEngine {
     }
 
     if (this.wouldHitWall(p.x, p.y, p.dir)) {
-      const { cx, cy } = this.tileCenterAt(p.x, p.y);
-      p.x = cx;
-      p.y = cy;
-      return;
+      const { row } = worldToTile(p.x, p.y);
+      if (
+        isTunnelApproachRow(row) &&
+        (p.dir === 'left' || p.dir === 'right') &&
+        p.nextDir === 'none'
+      ) {
+        const vDir: Direction = row < TUNNEL_ROW ? 'down' : 'up';
+        if (!this.wouldHitWall(p.x, p.y, vDir)) {
+          p.dir = vDir;
+          this.snapToLane(p);
+        } else {
+          const { cx, cy } = this.tileCenterAt(p.x, p.y);
+          p.x = cx;
+          p.y = cy;
+          return;
+        }
+      } else {
+        const { cx, cy } = this.tileCenterAt(p.x, p.y);
+        p.x = cx;
+        p.y = cy;
+        return;
+      }
     }
 
     p.x = nx;
