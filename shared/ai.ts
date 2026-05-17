@@ -2,13 +2,16 @@ import { Direction } from './gameTypes';
 import {
   GHOST_PEN_EXIT_TILE,
   isGhostPenArea,
-  isTunnelApproachRow,
   isTunnelMouthColumn,
   isTunnelRow,
   isWalkable,
   MAZE_COLS,
   MAZE_ROWS,
-  nearestTunnelMouthCol,
+  SIDE_TUNNEL_ROW,
+  TUNNEL_LEFT_MAX,
+  TUNNEL_LEFT_MIN,
+  TUNNEL_RIGHT_MAX,
+  TUNNEL_RIGHT_MIN,
   TUNNEL_ROW,
   wrapCol,
 } from './maze';
@@ -59,7 +62,50 @@ function clampTile(col: number, row: number): { col: number; row: number } {
   return { col: c, row: r };
 }
 
-/** Step onto the tunnel row when stuck on the row above/below (corner above mouth) */
+function snapMouthCol(col: number): number {
+  if (col <= (TUNNEL_LEFT_MAX + TUNNEL_RIGHT_MIN) / 2) {
+    return Math.max(TUNNEL_LEFT_MIN, Math.min(col, TUNNEL_LEFT_MAX));
+  }
+  return Math.max(TUNNEL_RIGHT_MIN, Math.min(col, TUNNEL_RIGHT_MAX));
+}
+
+function wantsHorizontalCross(col: number, targetCol: number, targetRow: number, tunnelRow: number): boolean {
+  if (targetRow === tunnelRow && targetCol !== col) return true;
+  const onLeft = col <= TUNNEL_LEFT_MAX;
+  const targetOnLeft = targetCol <= TUNNEL_LEFT_MAX;
+  return onLeft !== targetOnLeft;
+}
+
+/** Drop onto a tunnel row when stuck on the wall lip above/below a mouth */
+function approachTunnelRow(
+  col: number,
+  row: number,
+  targetCol: number,
+  targetRow: number,
+  tunnelRow: number,
+  approachRows: number[],
+  forbid: Direction
+): Direction {
+  if (row === tunnelRow || !approachRows.includes(row)) return 'none';
+  if (!isTunnelMouthColumn(col) && !isTunnelMouthColumn(targetCol)) return 'none';
+  if (!wantsHorizontalCross(col, targetCol, targetRow, tunnelRow)) return 'none';
+
+  const mouthCol = snapMouthCol(targetCol);
+  if (col !== mouthCol) {
+    const hDir: Direction = mouthCol > col ? 'right' : 'left';
+    if (hDir !== forbid) {
+      const h = stepTile(col, row, hDir);
+      if (h && isWalkable(h.col, h.row)) return hDir;
+    }
+  }
+
+  const vDir: Direction = tunnelRow > row ? 'down' : 'up';
+  if (vDir === forbid) return 'none';
+  const v = stepTile(col, row, vDir);
+  if (v && v.row === tunnelRow && isWalkable(v.col, v.row)) return vDir;
+  return 'none';
+}
+
 function tunnelApproachDirection(
   col: number,
   row: number,
@@ -67,36 +113,26 @@ function tunnelApproachDirection(
   targetRow: number,
   forbid: Direction
 ): Direction {
-  if (row === TUNNEL_ROW) return 'none';
+  const side = approachTunnelRow(
+    col,
+    row,
+    targetCol,
+    targetRow,
+    SIDE_TUNNEL_ROW,
+    [SIDE_TUNNEL_ROW - 1, SIDE_TUNNEL_ROW + 1],
+    forbid
+  );
+  if (side !== 'none') return side;
 
-  const onApproach = isTunnelApproachRow(row);
-  const mouthCol = isTunnelMouthColumn(col) || isTunnelMouthColumn(targetCol);
-  if (!onApproach && !mouthCol) return 'none';
-
-  const wantCross =
-    Math.abs(targetCol - col) > 2 ||
-    (isTunnelRow(targetRow) && targetCol !== col) ||
-    (row !== targetRow && Math.abs(targetCol - col) > 1);
-  if (!wantCross) return 'none';
-
-  const towardMouth = nearestTunnelMouthCol(targetCol);
-  if (col !== towardMouth && onApproach) {
-    const hDir: Direction = towardMouth > col ? 'right' : 'left';
-    if (hDir !== forbid) {
-      const h = stepTile(col, row, hDir);
-      if (h && isWalkable(h.col, h.row)) return hDir;
-    }
-  }
-
-  if (row !== TUNNEL_ROW) {
-    const vDir: Direction = TUNNEL_ROW > row ? 'down' : 'up';
-    if (vDir !== forbid) {
-      const v = stepTile(col, row, vDir);
-      if (v && v.row === TUNNEL_ROW && isWalkable(v.col, v.row)) return vDir;
-    }
-  }
-
-  return 'none';
+  return approachTunnelRow(
+    col,
+    row,
+    targetCol,
+    targetRow,
+    TUNNEL_ROW,
+    [TUNNEL_ROW - 1, TUNNEL_ROW + 1],
+    forbid
+  );
 }
 
 /** One BFS from start — tile distances for all reachable cells */
