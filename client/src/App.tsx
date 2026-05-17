@@ -28,6 +28,7 @@ export default function App() {
   const [launchMode, setLaunchMode] = useState<GameMode>('local');
   const [onlineLaunch, setOnlineLaunch] = useState<OnlineLaunchOptions>({ joinMode: 'quick' });
   const [soloLaunch, setSoloLaunch] = useState<SoloLaunchOptions>({ difficulty: 'easy' });
+  const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
 
   const enterGame = useCallback(
     (s: AuthSession, mode: GameMode, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => {
@@ -89,15 +90,26 @@ export default function App() {
   };
 
   const handleExitToWelcome = () => {
+    setLeaderboardRefreshKey((k) => k + 1);
     setPhase('welcome');
   };
+
+  const handleScoreRecorded = useCallback(() => {
+    setLeaderboardRefreshKey((k) => k + 1);
+  }, []);
 
   if (isAdminPath()) {
     return <AdminScreen />;
   }
 
   if (phase === 'welcome') {
-    return <WelcomeScreen onPlay={continueToGame} onLogout={session ? handleLogout : undefined} />;
+    return (
+      <WelcomeScreen
+        onPlay={continueToGame}
+        onLogout={session ? handleLogout : undefined}
+        leaderboardRefreshKey={leaderboardRefreshKey}
+      />
+    );
   }
 
   if (phase === 'boot') {
@@ -128,9 +140,16 @@ export default function App() {
         onlineLaunch={onlineLaunch}
         soloLaunch={soloLaunch}
         onExitToWelcome={handleExitToWelcome}
+        onScoreRecorded={handleScoreRecorded}
       />
     );
   }
 
-  return <WelcomeScreen onPlay={continueToGame} onLogout={session ? handleLogout : undefined} />;
+  return (
+    <WelcomeScreen
+      onPlay={continueToGame}
+      onLogout={session ? handleLogout : undefined}
+      leaderboardRefreshKey={leaderboardRefreshKey}
+    />
+  );
 }

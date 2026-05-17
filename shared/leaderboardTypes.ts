@@ -10,8 +10,20 @@ export interface LeaderboardEntry {
   gamesPlayed: number;
 }
 
+export interface YourLeaderboardStats {
+  bestScore: number;
+  wins: number;
+  gamesPlayed: number;
+}
+
 export interface LeaderboardResponse {
   entries: LeaderboardEntry[];
+  you?: YourLeaderboardStats | null;
+}
+
+export interface RecordGameResponse {
+  ok: boolean;
+  bestScore: number;
 }
 
 export interface RecordGamePayload {

@@ -24,11 +24,12 @@ import './welcome/welcome.css';
 type Props = {
   onPlay: (mode: GameMode, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => void;
   onLogout?: () => void;
+  leaderboardRefreshKey?: number;
 };
 
 const LOAD_MS = 2800;
 
-export function WelcomeScreen({ onPlay, onLogout }: Props) {
+export function WelcomeScreen({ onPlay, onLogout, leaderboardRefreshKey = 0 }: Props) {
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState<'solo' | 'online'>('solo');
@@ -151,7 +152,7 @@ export function WelcomeScreen({ onPlay, onLogout }: Props) {
       </div>
 
       <ArcadePlayers />
-      <DualLeaderboards limit={5} />
+      <DualLeaderboards limit={5} refreshKey={leaderboardRefreshKey} />
       <ArcadeRuleCards />
 
       <ArcadeFooter />

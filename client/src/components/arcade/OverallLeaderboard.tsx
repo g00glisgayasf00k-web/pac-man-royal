@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
-import type { LeaderboardEntry, LeaderboardMode } from '../../../../shared/leaderboardTypes';
+import type { LeaderboardEntry, LeaderboardMode, YourLeaderboardStats } from '../../../../shared/leaderboardTypes';
 import { fetchLeaderboard } from '../../auth/api';
+import { loadSession } from '../../auth/session';
 
 type Props = {
   mode: LeaderboardMode;
   title: string;
   limit?: number;
   className?: string;
+  refreshKey?: number;
 };
 
-export function OverallLeaderboard({ mode, title, limit = 5, className = '' }: Props) {
+export function OverallLeaderboard({ mode, title, limit = 5, className = '', refreshKey = 0 }: Props) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [you, setYou] = useState<YourLeaderboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -18,9 +21,13 @@ export function OverallLeaderboard({ mode, title, limit = 5, className = '' }: P
     let cancelled = false;
     setLoading(true);
     setError('');
-    fetchLeaderboard(mode, limit)
+    const token = loadSession()?.token;
+    fetchLeaderboard(mode, limit, token)
       .then((data) => {
-        if (!cancelled) setEntries(data);
+        if (!cancelled) {
+          setEntries(data.entries);
+          setYou(data.you ?? null);
+        }
       })
       .catch(() => {
         if (!cancelled) setError('Could not load scores');
@@ -31,7 +38,11 @@ export function OverallLeaderboard({ mode, title, limit = 5, className = '' }: P
     return () => {
       cancelled = true;
     };
-  }, [mode, limit]);
+  }, [mode, limit, refreshKey]);
+
+  const sessionUsername = loadSession()?.user.username;
+  const youInTop =
+    you && sessionUsername && entries.some((e) => e.username === sessionUsername);
 
   return (
     <section
@@ -42,7 +53,7 @@ export function OverallLeaderboard({ mode, title, limit = 5, className = '' }: P
 
       {loading && <p className="leaderboard-status">LOADING…</p>}
       {!loading && error && <p className="leaderboard-status leaderboard-error">{error}</p>}
-      {!loading && !error && entries.length === 0 && (
+      {!loading && !error && entries.length === 0 && !you && (
         <p className="leaderboard-status">NO SCORES YET</p>
       )}
 
@@ -66,16 +77,31 @@ export function OverallLeaderboard({ mode, title, limit = 5, className = '' }: P
         </ol>
       )}
 
+      {!loading && !error && you && you.gamesPlayed > 0 && (
+        <p className={`leaderboard-you${youInTop ? ' leaderboard-you-in-top' : ''}`}>
+          YOUR BEST: <strong>{you.bestScore.toLocaleString()}</strong>
+          {!youInTop && entries.length > 0 ? ' · not in top 5 yet' : ''}
+        </p>
+      )}
+
       <p className="leaderboard-foot">WINS · HIGH SCORE</p>
     </section>
   );
 }
 
-export function DualLeaderboards({ limit = 5, className = '' }: { limit?: number; className?: string }) {
+export function DualLeaderboards({
+  limit = 5,
+  className = '',
+  refreshKey = 0,
+}: {
+  limit?: number;
+  className?: string;
+  refreshKey?: number;
+}) {
   return (
     <div className={`leaderboards-row ${className}`.trim()}>
-      <OverallLeaderboard mode="local" title="SOLO VS AI" limit={limit} />
-      <OverallLeaderboard mode="online" title="ONLINE" limit={limit} />
+      <OverallLeaderboard mode="local" title="SOLO VS AI" limit={limit} refreshKey={refreshKey} />
+      <OverallLeaderboard mode="online" title="ONLINE" limit={limit} refreshKey={refreshKey} />
     </div>
   );
 }

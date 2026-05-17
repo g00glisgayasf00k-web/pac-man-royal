@@ -47,6 +47,7 @@ type Props = {
   onlineLaunch: OnlineLaunchOptions;
   soloLaunch: SoloLaunchOptions;
   onExitToWelcome: () => void;
+  onScoreRecorded?: () => void;
 };
 
 export default function GameApp({
@@ -55,6 +56,7 @@ export default function GameApp({
   onlineLaunch,
   soloLaunch,
   onExitToWelcome,
+  onScoreRecorded,
 }: Props) {
   const [screen, setScreen] = useState<Screen>('game');
   const [mode, setMode] = useState<GameMode>('local');
@@ -89,6 +91,29 @@ export default function GameApp({
     setSnapshot(snap);
   }, []);
 
+  const persistMatchResult = useCallback(
+    async (snap: GameSnapshot, gameMode: GameMode) => {
+      if (resultRecordedRef.current || snap.status !== 'ended') return;
+      const me = snap.players.find((p) => p.id === playerId);
+      if (!me) return;
+      const token = loadSession()?.token;
+      if (!token) return;
+
+      resultRecordedRef.current = true;
+      try {
+        await recordGameResult(token, {
+          score: me.score,
+          won: snap.winnerId === playerId,
+          mode: gameMode,
+        });
+        onScoreRecorded?.();
+      } catch {
+        resultRecordedRef.current = false;
+      }
+    },
+    [playerId, onScoreRecorded]
+  );
+
   const startLocalLoop = useCallback(() => {
     stopLoop();
     let last = performance.now();
@@ -121,6 +146,7 @@ export default function GameApp({
       }
 
       if (snap.status === 'ended') {
+        void persistMatchResult(snap, 'local');
         pushUiSnapshot(snap);
         setScreen('win');
         stopLoop();
@@ -129,7 +155,7 @@ export default function GameApp({
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
-  }, [stopLoop, pushUiSnapshot, UI_DT]);
+  }, [stopLoop, pushUiSnapshot, UI_DT, persistMatchResult]);
 
   const cleanupMatch = useCallback(() => {
     stopLoop();
@@ -144,11 +170,15 @@ export default function GameApp({
   }, [stopLoop]);
 
   const exitToWelcome = useCallback(() => {
+    const snap = liveSnapshotRef.current;
+    if (snap?.status === 'ended') {
+      void persistMatchResult(snap, mode);
+    }
     cleanupMatch();
     resultRecordedRef.current = false;
     autoStartedRef.current = false;
     onExitToWelcome();
-  }, [cleanupMatch, onExitToWelcome]);
+  }, [cleanupMatch, onExitToWelcome, persistMatchResult, mode]);
 
   const handleJoinResponse = useCallback(
     (socket: Socket, res: JoinResponse) => {
@@ -171,6 +201,7 @@ export default function GameApp({
 
   const startGame = useCallback(
     (gameMode: GameMode, name: string, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => {
+      resultRecordedRef.current = false;
       setMode(gameMode);
       if (gameMode === 'online') {
         const join = online ?? onlineLaunchRef.current;
@@ -292,21 +323,6 @@ export default function GameApp({
   }, [stopLoop]);
 
   useEffect(() => {
-    if (screen !== 'win' || !snapshot || mode !== 'local') return;
-    if (resultRecordedRef.current) return;
-    const me = snapshot.players.find((p) => p.id === playerId);
-    if (!me) return;
-    resultRecordedRef.current = true;
-    const token = loadSession()?.token;
-    if (!token) return;
-    void recordGameResult(token, {
-      score: me.score,
-      won: snapshot.winnerId === playerId,
-      mode: 'local',
-    }).catch(() => {});
-  }, [screen, snapshot, mode, playerId]);
-
-  useEffect(() => {
     if (autoStartedRef.current) return;
     autoStartedRef.current = true;
     startGame(
@@ -318,11 +334,15 @@ export default function GameApp({
   }, [launchMode, onlineLaunch, soloLaunch, user.displayName, startGame]);
 
   const playAgain = useCallback(() => {
+    const snap = liveSnapshotRef.current;
+    if (snap?.status === 'ended') {
+      void persistMatchResult(snap, mode);
+    }
     cleanupMatch();
     resultRecordedRef.current = false;
     setScreen('game');
     startGame(mode, user.displayName);
-  }, [cleanupMatch, mode, user.displayName, startGame]);
+  }, [cleanupMatch, mode, user.displayName, startGame, persistMatchResult]);
 
   return (
     <div className="app game-screen">

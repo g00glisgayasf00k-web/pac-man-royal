@@ -97,6 +97,40 @@ export async function resetLeaderboardData(): Promise<void> {
   await resetGameResults();
 }
 
+export async function getYourLeaderboardStats(
+  userId: string,
+  mode: LeaderboardMode
+): Promise<{ bestScore: number; wins: number; gamesPlayed: number } | null> {
+  if (useDatabase()) {
+    const { rows } = await getPool().query<{
+      best_score: number;
+      wins: number;
+      games_played: number;
+    }>(
+      `SELECT best_score, wins, games_played
+       FROM leaderboard_stats
+       WHERE user_id = $1 AND mode = $2`,
+      [userId, mode]
+    );
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      bestScore: row.best_score,
+      wins: row.wins,
+      gamesPlayed: row.games_played,
+    };
+  }
+
+  await loadFileStore();
+  const entry = store.entries[storeKey(userId, mode)];
+  if (!entry) return null;
+  return {
+    bestScore: entry.bestScore,
+    wins: entry.wins,
+    gamesPlayed: entry.gamesPlayed,
+  };
+}
+
 export async function getLeaderboard(
   mode: LeaderboardMode,
   limit = 10
@@ -140,10 +174,10 @@ export async function recordGameResult(
   score: number,
   won: boolean,
   mode: LeaderboardMode
-): Promise<void> {
+): Promise<{ bestScore: number }> {
   const user = await getUserByToken(token);
   if (!user) throw new Error('Not authenticated');
-  await recordGameResultForUser(user.id, user.username, user.displayName, score, won, mode);
+  return recordGameResultForUser(user.id, user.username, user.displayName, score, won, mode);
 }
 
 export async function recordGameResultForUser(
@@ -153,7 +187,7 @@ export async function recordGameResultForUser(
   score: number,
   won: boolean,
   mode: LeaderboardMode
-): Promise<void> {
+): Promise<{ bestScore: number }> {
   const pts = Math.max(0, Math.floor(score));
   const now = Date.now();
   const gameMode = normalizeMode(mode);
@@ -171,24 +205,30 @@ export async function recordGameResultForUser(
       [userId, gameMode, won ? 1 : 0, pts, now]
     );
     await logGameResult(userId, username, displayName, pts, won, gameMode);
-    return;
+    const { rows } = await getPool().query<{ best_score: number }>(
+      `SELECT best_score FROM leaderboard_stats WHERE user_id = $1 AND mode = $2`,
+      [userId, gameMode]
+    );
+    return { bestScore: rows[0]?.best_score ?? pts };
   }
 
   await loadFileStore();
   const key = storeKey(userId, gameMode);
   const existing = store.entries[key];
   const prevBest = existing?.bestScore ?? 0;
+  const bestScore = Math.max(prevBest, pts);
   store.entries[key] = {
     userId,
     mode: gameMode,
     username,
     displayName,
     wins: (existing?.wins ?? 0) + (won ? 1 : 0),
-    bestScore: Math.max(prevBest, pts),
+    bestScore,
     totalPoints: (existing?.totalPoints ?? 0) + pts,
     gamesPlayed: (existing?.gamesPlayed ?? 0) + 1,
     updatedAt: now,
   };
   await saveFileStore();
   await logGameResult(userId, username, displayName, pts, won, gameMode);
+  return { bestScore };
 }
