@@ -68,8 +68,8 @@ export const CLASSIC_SPAWNS: { col: number; row: number }[] = [
   { col: 16, row: 17 }, // Clyde
 ];
 
-/** Side tunnel on the middle corridor (left/right exits only) */
-export const TUNNEL_ROW = 35;
+/** Side tunnel row — `......||....||....||......` (middle corridor, not bottom) */
+export const TUNNEL_ROW = 17;
 export const TUNNEL_LEFT_MIN = 1;
 export const TUNNEL_LEFT_MAX = 6;
 export const TUNNEL_RIGHT_MIN = 21;
