@@ -128,6 +128,6 @@ Use Capacitor if you may add push notifications, haptics, or other native featur
 ## Related project docs
 
 - **[README.md](./README.md)** — local development, build, and Render deployment
-- **`render.yaml`** — Blueprint deploy with PostgreSQL for persistent accounts
+- **`render.yaml`** — Blueprint deploy (web service only; no database by default)
 
 If you want Play Store scaffolding added to this repo (manifest, icons, Bubblewrap or Capacitor config), open an issue or ask in development chat.

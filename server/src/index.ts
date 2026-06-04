@@ -48,11 +48,9 @@ async function start() {
       console.log('Leaderboard and match history cleared for new 3-minute scoring.');
     }
     if (useDatabase()) {
-      console.log('User accounts: PostgreSQL (persists across deploys)');
+      console.log('User accounts: PostgreSQL');
     } else {
-      console.warn(
-        'User accounts: local JSON only — set DATABASE_URL on Render or accounts reset each deploy'
-      );
+      console.log('User accounts: local JSON (server/data) — no DATABASE_URL');
     }
   } catch (err) {
     console.error('Failed to initialize database:', err);

@@ -62,18 +62,19 @@ Serve the client `dist` behind the same host (default in production) or set `VIT
 - The free tier sleeps after ~15 minutes of no traffic; the first visit may take 30–60 seconds to wake up.
 - For reliable multiplayer, use a paid instance so the server stays awake.
 
-### Persistent player accounts (required for a community)
+### Storage on Render (no database)
 
-Render **wipes the server disk on every deploy**. If accounts are stored only in a local file, every push deletes all sign-ups.
+The default **`render.yaml`** deploys **only the web service** — no PostgreSQL. Accounts, leaderboard, and admin stats use JSON files under `server/data/` while the instance is running.
 
-This project uses **PostgreSQL** when `DATABASE_URL` is set (configured automatically via `render.yaml`).
+**Trade-off:** Render’s free tier **resets disk on each deploy**, and the service **sleeps** when idle. Sign-ups and scores may be lost after redeploys or long idle periods. That is fine for casual play; add Postgres later only if you need permanent accounts.
 
-1. Deploy with the **Blueprint** (`render.yaml`) so Render creates a free Postgres database and links it to the web service, **or**
-2. On an existing service: **New +** → **PostgreSQL** → create DB → copy **Internal Database URL** → add env var `DATABASE_URL` on your web service → redeploy.
+1. **New deploy:** **New +** → **Blueprint** → select this repo (uses `render.yaml`).
+2. **Existing service that used Postgres:** open the web service → **Environment** → **delete** `DATABASE_URL` → save → **Manual Deploy**.
+3. Optional: delete the unused Postgres instance in Render to avoid billing.
 
-Local dev without Postgres still uses `server/data/users.json` (fine for testing only).
+Check after deploy: `https://YOUR-APP.onrender.com/api/health` should show `"userStore": "file"`.
 
-Check persistence after deploy: open `https://YOUR-APP.onrender.com/api/health` — `userStore` should be `"postgres"`, not `"file"`.
+**Optional PostgreSQL:** set `DATABASE_URL` on the web service (and remove it from the blueprint-only flow). The server picks Postgres automatically when that variable is present.
 
 ## Publishing to Google Play Store
 
