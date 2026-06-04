@@ -18,20 +18,27 @@ import { ArcadeModeSelect, tabToGameMode } from './arcade/ArcadeModeSelect';
 import { OnlineJoinSelect } from './arcade/OnlineJoinSelect';
 import { SoloDifficultySelect } from './arcade/SoloDifficultySelect';
 import { DualLeaderboards } from './arcade/OverallLeaderboard';
+import { createGuestSession, loadPlayerName, saveSession } from '../auth/session';
 import { clearRoomFromUrl, readRoomCodeFromUrl } from '../utils/roomInvite';
 import './welcome/welcome.css';
 
 type Props = {
-  onPlay: (mode: GameMode, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => void;
-  onLogout?: () => void;
+  onPlay: (
+    mode: GameMode,
+    online?: OnlineLaunchOptions,
+    solo?: SoloLaunchOptions,
+    displayName?: string
+  ) => void;
   leaderboardRefreshKey?: number;
 };
 
 const LOAD_MS = 2800;
 
-export function WelcomeScreen({ onPlay, onLogout, leaderboardRefreshKey = 0 }: Props) {
+export function WelcomeScreen({ onPlay, leaderboardRefreshKey = 0 }: Props) {
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
+  const [playerName, setPlayerName] = useState(loadPlayerName);
+  const [nameError, setNameError] = useState('');
   const [tab, setTab] = useState<'solo' | 'online'>('solo');
   const [onlineJoinMode, setOnlineJoinMode] = useState<OnlineJoinMode>('quick');
   const [joinCode, setJoinCode] = useState('');
@@ -65,14 +72,22 @@ export function WelcomeScreen({ onPlay, onLogout, leaderboardRefreshKey = 0 }: P
 
   const launch = useCallback(() => {
     if (!ready) return;
-    const mode = tabToGameMode(tab);
-    if (mode === 'online') {
-      if (onlineJoinMode === 'join' && joinCode.trim().length < 4) return;
-      onPlay(mode, { joinMode: onlineJoinMode, code: joinCode.trim() || undefined });
+    const name = playerName.trim();
+    if (name.length < 2) {
+      setNameError('Enter a name (2–16 characters)');
       return;
     }
-    onPlay(mode);
-  }, [ready, onPlay, tab, onlineJoinMode, joinCode]);
+    setNameError('');
+    saveSession(createGuestSession(name));
+    const mode = tabToGameMode(tab);
+    const soloOpts = { difficulty: soloDifficulty };
+    if (mode === 'online') {
+      if (onlineJoinMode === 'join' && joinCode.trim().length < 4) return;
+      onPlay(mode, { joinMode: onlineJoinMode, code: joinCode.trim() || undefined }, soloOpts, name);
+      return;
+    }
+    onPlay(mode, undefined, soloOpts, name);
+  }, [ready, onPlay, tab, onlineJoinMode, joinCode, playerName, soloDifficulty]);
 
   useEffect(() => {
     if (!ready) return;
@@ -88,14 +103,25 @@ export function WelcomeScreen({ onPlay, onLogout, leaderboardRefreshKey = 0 }: P
 
   return (
     <ArcadeGate className="welcome-gate">
-      {onLogout && (
-        <div className="welcome-top-bar">
-          <button type="button" className="btn-sec" onClick={onLogout}>
-            SIGN OUT
-          </button>
-        </div>
-      )}
       <ArcadeHeader />
+
+      <label className="player-name-field">
+        <span className="section-label">— YOUR NAME —</span>
+        <input
+          type="text"
+          className="online-join-code-input player-name-input"
+          value={playerName}
+          onChange={(e) => {
+            setPlayerName(e.target.value);
+            setNameError('');
+          }}
+          placeholder="Enter name"
+          maxLength={16}
+          autoComplete="nickname"
+          spellCheck={false}
+        />
+        {nameError && <p className="leaderboard-status leaderboard-error">{nameError}</p>}
+      </label>
 
       <div className="target-bar">
         <span className="target-icon" aria-hidden>
@@ -136,7 +162,9 @@ export function WelcomeScreen({ onPlay, onLogout, leaderboardRefreshKey = 0 }: P
           type="button"
           className="btn-play"
           disabled={
-            !ready || (tab === 'online' && onlineJoinMode === 'join' && joinCode.trim().length < 4)
+            !ready ||
+            playerName.trim().length < 2 ||
+            (tab === 'online' && onlineJoinMode === 'join' && joinCode.trim().length < 4)
           }
           onClick={launch}
         >

@@ -11,6 +11,21 @@
   padding: 8px 10px;
 }
 
+.arcade-gate.welcome-gate .player-name-field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.arcade-gate.welcome-gate .player-name-field .section-label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.arcade-gate.welcome-gate .player-name-input {
+  letter-spacing: 1px;
+  text-transform: none;
+}
+
 .arcade-gate.welcome-gate .target-fill {
   transition: width 0.08s linear;
 }

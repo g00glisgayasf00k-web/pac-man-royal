@@ -1,15 +1,13 @@
 import { useCallback, useState } from 'react';
 import { GameMode, OnlineLaunchOptions, SoloLaunchOptions } from '../../shared/gameTypes';
-import { fetchMe, logout } from './auth/api';
 import {
-  clearSession,
+  createGuestSession,
   hasCompletedOnboarding,
   loadSession,
   markOnboardingComplete,
   saveSession,
 } from './auth/session';
 import type { AuthSession } from './auth/types';
-import { AuthScreen } from './components/AuthScreen';
 import { OnboardingScreen } from './components/OnboardingScreen';
 import { AdminScreen } from './components/AdminScreen';
 import { WelcomeScreen } from './components/WelcomeScreen';
@@ -20,11 +18,11 @@ function isAdminPath() {
   return p === '/admin';
 }
 
-type Phase = 'welcome' | 'auth' | 'onboarding' | 'game' | 'boot';
+type Phase = 'welcome' | 'onboarding' | 'game';
 
 export default function App() {
   const [phase, setPhase] = useState<Phase>('welcome');
-  const [session, setSession] = useState<AuthSession | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(() => loadSession());
   const [launchMode, setLaunchMode] = useState<GameMode>('local');
   const [onlineLaunch, setOnlineLaunch] = useState<OnlineLaunchOptions>({ joinMode: 'quick' });
   const [soloLaunch, setSoloLaunch] = useState<SoloLaunchOptions>({ difficulty: 'easy' });
@@ -47,46 +45,21 @@ export default function App() {
   );
 
   const continueToGame = useCallback(
-    async (mode: GameMode, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => {
-      setLaunchMode(mode);
-      if (online) setOnlineLaunch(online);
-      if (solo) setSoloLaunch(solo);
-      setPhase('boot');
-      const saved = loadSession();
-      if (!saved?.token) {
-        setPhase('auth');
-        return;
-      }
-      try {
-        const user = await fetchMe(saved.token);
-        const next = { token: saved.token, user };
-        saveSession(next);
-        setSession(next);
-        enterGame(next, mode, online);
-      } catch {
-        clearSession();
-        setPhase('auth');
-      }
+    (mode: GameMode, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions, displayName?: string) => {
+      const name = displayName?.trim();
+      if (!name || name.length < 2) return;
+
+      const next = createGuestSession(name);
+      saveSession(next);
+      setSession(next);
+      enterGame(next, mode, online, solo);
     },
     [enterGame]
   );
 
-  const handleAuthSuccess = (s: AuthSession) => {
-    saveSession(s);
-    setSession(s);
-    enterGame(s, launchMode);
-  };
-
   const handleOnboardingComplete = () => {
     if (session) markOnboardingComplete(session.user.id);
     setPhase('game');
-  };
-
-  const handleLogout = async () => {
-    if (session?.token) await logout(session.token);
-    clearSession();
-    setSession(null);
-    setPhase('auth');
   };
 
   const handleExitToWelcome = () => {
@@ -104,26 +77,8 @@ export default function App() {
 
   if (phase === 'welcome') {
     return (
-      <WelcomeScreen
-        onPlay={continueToGame}
-        onLogout={session ? handleLogout : undefined}
-        leaderboardRefreshKey={leaderboardRefreshKey}
-      />
+      <WelcomeScreen onPlay={continueToGame} leaderboardRefreshKey={leaderboardRefreshKey} />
     );
-  }
-
-  if (phase === 'boot') {
-    return (
-      <div className="gate-screen welcome-screen">
-        <div className="welcome-inner">
-          <p className="welcome-hint">Checking account…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (phase === 'auth') {
-    return <AuthScreen onSuccess={handleAuthSuccess} />;
   }
 
   if (phase === 'onboarding' && session) {
@@ -145,11 +100,5 @@ export default function App() {
     );
   }
 
-  return (
-    <WelcomeScreen
-      onPlay={continueToGame}
-      onLogout={session ? handleLogout : undefined}
-      leaderboardRefreshKey={leaderboardRefreshKey}
-    />
-  );
+  return <WelcomeScreen onPlay={continueToGame} leaderboardRefreshKey={leaderboardRefreshKey} />;
 }

@@ -43,4 +43,29 @@ export function markOnboardingComplete(userId: string) {
   }
 }
 
+export function createGuestSession(displayName: string): AuthSession {
+  const trimmed = displayName.trim().slice(0, 16);
+  const existing = loadSession();
+  const id = existing?.user.id ?? crypto.randomUUID();
+  const slug =
+    trimmed
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 20) || 'player';
+  return {
+    token: '',
+    user: {
+      id,
+      username: slug,
+      displayName: trimmed,
+      createdAt: existing?.user.createdAt ?? Date.now(),
+    },
+  };
+}
+
+export function loadPlayerName(): string {
+  return loadSession()?.user.displayName ?? '';
+}
+
 export type { AuthUser };
