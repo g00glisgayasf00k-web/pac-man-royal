@@ -22,7 +22,7 @@ export function Scoreboard({ snapshot, highlightId }: Props) {
   const timerLabel = snapshot.status === 'ended' ? "Time's up" : remaining;
 
   return (
-    <div className="scoreboard" role="region" aria-label="Live scores">
+    <div className="scoreboard scoreboard--compact" role="region" aria-label="Live scores">
       <ol className="scoreboard-track">
         {sorted.map((p, rank) => (
           <li

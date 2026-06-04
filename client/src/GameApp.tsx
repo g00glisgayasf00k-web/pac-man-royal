@@ -17,9 +17,13 @@ import {
   soloDifficultySpeedMultiplier,
 } from '../../shared/gameTypes';
 import { GameEngine } from '../../shared/gameEngine';
+import { ArcadeHud } from './components/ArcadeHud';
+import { DpadControls } from './components/DpadControls';
 import { GameCanvas } from './components/GameCanvas';
+import { MatchStartFlash } from './components/MatchStartFlash';
 import { OnlineWaiting } from './components/OnlineWaiting';
 import { Scoreboard } from './components/Scoreboard';
+import { useGameJuice } from './hooks/useGameJuice';
 import { useKeyboardInput } from './hooks/useInput';
 import { useSwipeInput } from './hooks/useSwipeInput';
 import { recordGameResult } from './auth/api';
@@ -301,9 +305,32 @@ export default function GameApp({
 
   const waitingOnline = mode === 'online' && onlineLobby && !snapshot;
   const controlsEnabled = screen === 'game' && !!snapshot && !waitingOnline;
+  const { effects, highScore, lives, level } = useGameJuice(snapshot, playerId);
+  const [showStartFlash, setShowStartFlash] = useState(false);
+  const startFlashPlayedRef = useRef(false);
+  useEffect(() => {
+    if (controlsEnabled && snapshot?.status === 'playing' && !startFlashPlayedRef.current) {
+      startFlashPlayedRef.current = true;
+      setShowStartFlash(true);
+    }
+    if (!snapshot) {
+      startFlashPlayedRef.current = false;
+      setShowStartFlash(false);
+    }
+  }, [controlsEnabled, snapshot?.status, snapshot]);
 
   useKeyboardInput(controlsEnabled, playerSlot, sendInput);
   const swipeHandlers = useSwipeInput(controlsEnabled, sendInput);
+
+  const stageClass = [
+    'game-stage',
+    controlsEnabled ? 'swipe-input' : '',
+    effects.powerGlow ? 'game-stage--power-glow' : '',
+    effects.shake ? 'game-stage--shake' : '',
+    effects.flash ? 'game-stage--flash' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   useEffect(() => {
     const lock = screen === 'game';
@@ -344,72 +371,96 @@ export default function GameApp({
     startGame(mode, user.displayName);
   }, [cleanupMatch, mode, user.displayName, startGame, persistMatchResult]);
 
+  const hudSubtitle =
+    mode === 'local'
+      ? `${soloDifficultyLabel(soloLaunchRef.current.difficulty)} SOLO`
+      : onlineStatus || undefined;
+
+  const myScore = snapshot?.players.find((p) => p.id === playerId)?.score ?? 0;
+
   return (
-    <div className="app game-screen">
-      <header className="top-bar">
-        <button type="button" className="btn-ghost" onClick={exitToWelcome}>
-          ← Exit
+    <div className="app game-screen mobile-game-shell">
+      <header className="mobile-top-bar">
+        <button type="button" className="btn-exit" onClick={exitToWelcome}>
+          MENU
         </button>
-        <h1>Pac-Man Battle Royale</h1>
+        <span className="mobile-top-bar__title">PAC-MAN BATTLE ROYALE</span>
         {mode === 'local' && (
-          <span className="room-tag">
-            {soloDifficultyLabel(soloLaunchRef.current.difficulty)} · ×
-            {soloDifficultySpeedMultiplier(soloLaunchRef.current.difficulty)}
+          <span className="mobile-top-bar__tag">
+            {soloDifficultyLabel(soloLaunchRef.current.difficulty)}
           </span>
         )}
-        {onlineStatus && <span className="room-tag">{onlineStatus}</span>}
+        {mode === 'online' && onlineStatus && (
+          <span className="mobile-top-bar__tag" title={onlineStatus}>
+            ONLINE
+          </span>
+        )}
       </header>
 
       {!waitingOnline && (
-        <Scoreboard snapshot={snapshot} highlightId={playerId} />
+        <>
+          <ArcadeHud
+            snapshot={snapshot}
+            playerId={playerId}
+            highScore={highScore}
+            lives={lives}
+            level={level}
+            scorePop={effects.scorePop}
+            subtitle={hudSubtitle}
+          />
+          <Scoreboard snapshot={snapshot} highlightId={playerId} />
+        </>
       )}
 
       <main className="play-area">
         {waitingOnline ? (
           <OnlineWaiting lobby={onlineLobby} roomCode={roomCode} />
         ) : (
-          <div
-            className={`game-stage${controlsEnabled ? ' swipe-input' : ''}`}
-            {...swipeHandlers}
-          >
-            <GameCanvas
-              snapshot={snapshot}
-              liveSnapshotRef={liveSnapshotRef}
-              blendHz={mode === 'online' ? NETWORK_SNAPSHOT_HZ : 60}
-            />
+          <div className="game-stage-wrap">
+            <div className={stageClass} {...swipeHandlers}>
+              <GameCanvas
+                snapshot={snapshot}
+                liveSnapshotRef={liveSnapshotRef}
+                blendHz={mode === 'online' ? NETWORK_SNAPSHOT_HZ : 60}
+              />
+              <MatchStartFlash
+                active={showStartFlash}
+                onDone={() => setShowStartFlash(false)}
+              />
+              {effects.scoreDelta != null && (
+                <span className="score-float" key={snapshot?.tick}>
+                  +{effects.scoreDelta}
+                </span>
+              )}
+            </div>
           </div>
         )}
       </main>
 
+      {!waitingOnline && (
+        <DpadControls enabled={controlsEnabled} onDirection={sendInput} />
+      )}
+
       {screen === 'win' && snapshot?.winnerName && (
         <div className="overlay win-overlay">
           <div className="win-card">
-            <h2>{snapshot.winnerName} wins!</h2>
+            <p className="win-label">GAME OVER</p>
+            <h2>{snapshot.winnerName} WINS!</h2>
             <p>
-              Highest score when time ran out —{' '}
-              {snapshot.players.find((p) => p.id === snapshot.winnerId)?.score ?? 0} pts
+              YOUR SCORE: {myScore}
+              <br />
+              WINNER: {snapshot.players.find((p) => p.id === snapshot.winnerId)?.score ?? 0} PTS
             </p>
             <div className="win-actions">
-              <button type="button" className="btn-primary" onClick={playAgain}>
-                Play again
+              <button type="button" className="btn-arcade-primary" onClick={playAgain}>
+                PLAY AGAIN
               </button>
-              <button type="button" className="btn-ghost" onClick={exitToWelcome}>
-                Exit
+              <button type="button" className="btn-arcade-secondary" onClick={exitToWelcome}>
+                MAIN MENU
               </button>
             </div>
           </div>
         </div>
-      )}
-
-      {!waitingOnline && (
-        <footer className="hint-bar">
-          <span className="hint-desktop">
-            Arrow keys to move • Catch Pac-Man to become him • Eat pellets for points
-          </span>
-          <span className="hint-mobile">
-            Swipe on the maze to move • Catch Pac-Man to become him • Eat pellets for points
-          </span>
-        </footer>
       )}
     </div>
   );
