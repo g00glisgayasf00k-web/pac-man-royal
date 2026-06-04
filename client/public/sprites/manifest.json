@@ -1,0 +1,16 @@
+{
+  "wall/horiz": "/sprites/wall-horiz.png",
+  "wall/vert": "/sprites/wall-vert.png",
+  "wall/corner": "/sprites/wall-corner.png",
+  "wall/t": "/sprites/wall-t.png",
+  "wall/cross": "/sprites/wall-cross.png",
+  "wall/gate": "/sprites/wall-gate.png",
+  "wall/floor": "/sprites/wall-floor.png",
+  "ghost/blinky": "/sprites/ghost-blinky.png",
+  "ghost/pinky": "/sprites/ghost-pinky.png",
+  "ghost/inky": "/sprites/ghost-inky.png",
+  "ghost/clyde": "/sprites/ghost-clyde.png",
+  "ghost/fright": "/sprites/ghost-fright.png",
+  "ghost/flash": "/sprites/ghost-flash.png",
+  "ghost/eyes": "/sprites/ghost-eyes.png"
+}
