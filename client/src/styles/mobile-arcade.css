@@ -669,6 +669,13 @@ body:has(.mobile-game-shell) {
   color: var(--neon-yellow);
 }
 
+/* Touch devices: swipe only, no on-screen D-pad */
+@media (pointer: coarse), (max-width: 768px) {
+  .arcade-controls {
+    display: none;
+  }
+}
+
 @media (min-width: 421px) {
   body:has(.mobile-game-shell) {
     display: flex;

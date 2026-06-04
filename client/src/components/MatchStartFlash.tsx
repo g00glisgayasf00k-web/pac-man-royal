@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Props {
   active: boolean;
@@ -8,24 +8,26 @@ interface Props {
 /** Brief "GO!" flash when a match begins — presentation only */
 export function MatchStartFlash({ active, onDone }: Props) {
   const [phase, setPhase] = useState<'hidden' | 'ready' | 'go' | 'done'>('hidden');
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
 
   useEffect(() => {
     if (!active) {
       setPhase('hidden');
       return;
     }
-    if (phase !== 'hidden') return;
+
     setPhase('ready');
     const t1 = window.setTimeout(() => setPhase('go'), 600);
     const t2 = window.setTimeout(() => {
       setPhase('done');
-      onDone?.();
+      onDoneRef.current?.();
     }, 1400);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [active, phase, onDone]);
+  }, [active]);
 
   if (phase === 'hidden' || phase === 'done') return null;
 
