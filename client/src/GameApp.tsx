@@ -211,7 +211,7 @@ export default function GameApp({
         }
 
         const socket = io(SERVER_URL, {
-          transports: import.meta.env.PROD ? ['websocket'] : ['websocket', 'polling'],
+          transports: ['polling', 'websocket'],
         });
         socketRef.current = socket;
 

@@ -3,9 +3,16 @@ import pg from 'pg';
 const { Pool } = pg;
 
 let pool: pg.Pool | null = null;
+let databaseEnabled = Boolean(process.env.DATABASE_URL?.trim());
 
 export function useDatabase(): boolean {
-  return Boolean(process.env.DATABASE_URL?.trim());
+  return databaseEnabled;
+}
+
+/** Call when Postgres is configured but unreachable (e.g. stale Render DATABASE_URL). */
+export function disableDatabase(): void {
+  databaseEnabled = false;
+  pool = null;
 }
 
 export function getPool(): pg.Pool {

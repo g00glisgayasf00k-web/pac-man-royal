@@ -1,10 +1,71 @@
 import { GameSnapshot, TILE_SIZE } from '../../../shared/gameTypes';
 import { FruitKind } from '../../../shared/fruits';
-import { MAZE_COLS, MAZE_ROWS } from '../../../shared/maze';
+import { MAZE_COLS, MAZE_LAYOUT, MAZE_ROWS, tileAt } from '../../../shared/maze';
 
 const PELLET_COLOR = '#ffb8ae';
+const WALL_COLOR = '#2121de';
 const MAZE_W = MAZE_COLS * TILE_SIZE;
 const MAZE_H = MAZE_ROWS * TILE_SIZE;
+
+function isPathTile(col: number, row: number): boolean {
+  const t = tileAt(col, row);
+  return t === ' ' || t === '.' || t === 'o' || t === '-';
+}
+
+function drawMazeWalls(ctx: CanvasRenderingContext2D) {
+  const ts = TILE_SIZE;
+  const pad = 2;
+  const gap = 3;
+  ctx.strokeStyle = WALL_COLOR;
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'square';
+
+  for (let row = 0; row < MAZE_ROWS; row++) {
+    for (let col = 0; col < MAZE_COLS; col++) {
+      if (MAZE_LAYOUT[row][col] !== '|') continue;
+      const x = col * ts;
+      const y = row * ts;
+      const segs: [number, number, number, number][] = [];
+      if (isPathTile(col, row - 1)) {
+        segs.push([x + pad, y + pad, x + ts - pad, y + pad]);
+        segs.push([x + pad, y + pad + gap, x + ts - pad, y + pad + gap]);
+      }
+      if (isPathTile(col, row + 1)) {
+        segs.push([x + pad, y + ts - pad, x + ts - pad, y + ts - pad]);
+        segs.push([x + pad, y + ts - pad - gap, x + ts - pad, y + ts - pad - gap]);
+      }
+      if (isPathTile(col - 1, row)) {
+        segs.push([x + pad, y + pad, x + pad, y + ts - pad]);
+        segs.push([x + pad + gap, y + pad, x + pad + gap, y + ts - pad]);
+      }
+      if (isPathTile(col + 1, row)) {
+        segs.push([x + ts - pad, y + pad, x + ts - pad, y + ts - pad]);
+        segs.push([x + ts - pad - gap, y + pad, x + ts - pad - gap, y + ts - pad]);
+      }
+      for (const [x0, y0, x1, y1] of segs) {
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      }
+    }
+  }
+
+  for (let row = 0; row < MAZE_ROWS; row++) {
+    for (let col = 0; col < MAZE_COLS; col++) {
+      if (tileAt(col, row) !== '-') continue;
+      const y = row * ts + ts / 2;
+      const x0 = col * ts + 2;
+      const x1 = col * ts + ts - 2;
+      ctx.strokeStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(x0, y);
+      ctx.lineTo(x1, y);
+      ctx.stroke();
+      ctx.strokeStyle = WALL_COLOR;
+    }
+  }
+}
 
 const FRUIT_SPRITE_PATHS: Record<FruitKind, string> = {
   cherry: '/cherry.svg',
@@ -115,12 +176,13 @@ export function renderGame(ctx: CanvasRenderingContext2D, snap: GameSnapshot, wi
   ctx.translate(offsetX, offsetY);
   ctx.scale(scale, scale);
 
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvasW, canvasH);
   const bg = getMazeBackground();
   if (bg) {
     ctx.drawImage(bg, 0, 0, canvasW, canvasH);
   } else {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvasW, canvasH);
+    drawMazeWalls(ctx);
   }
 
   ensurePelletLayer(snap);
