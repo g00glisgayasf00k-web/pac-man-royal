@@ -1,5 +1,5 @@
 /**
- * Original Pac-Man arcade maze (28×36) — extracted from authentic ROM layout.
+ * Classic Pac-Man maze (28×36) — enclosed border, no side warp tunnels.
  * | wall   _ out-of-bounds   (space) walkable   . pellet   o power   - ghost gate
  */
 export const MAZE_LAYOUT: string[] = [
@@ -14,13 +14,13 @@ export const MAZE_LAYOUT: string[] = [
   '|..........................|',
   '|.||||.||.||||||||.||.||||.|',
   '|.||||.||.||||||||.||.||||.|',
-  ' ......||....||....||...... ',
+  '||||||.||....||....||....|||',
   '||||||.||||| || |||||.||||||',
   '_____|.||||| || |||||.|_____',
   '_____|.||          ||.|_____',
   '_____|.|| |||--||| ||.|_____',
   '||||||.|| |______| ||.||||||',
-  '      .   |______|   .      ',
+  '||||||.||          ||.||||||',
   '||||||.|| |______| ||.||||||',
   '_____|.|| |||||||| ||.|_____',
   '_____|.||          ||.|_____',
@@ -32,7 +32,7 @@ export const MAZE_LAYOUT: string[] = [
   '|o..||.......  .......||..o|',
   '|||.||.||.||||||||.||.||.|||',
   '|||.||.||.||||||||.||.||.|||',
-  '|......||....||....||......|',
+  '|.||||.||....||....||.||||.|',
   '|.||||||||||.||.||||||||||.|',
   '|.||||||||||.||.||||||||||.|',
   '|..........................|',
@@ -44,7 +44,7 @@ export const MAZE_LAYOUT: string[] = [
 export const MAZE_ROWS = MAZE_LAYOUT.length;
 export const MAZE_COLS = MAZE_LAYOUT[0].length;
 
-/** Central box floor — row with open space inside `|______|` */
+/** Central box floor inside the ghost house */
 export const BATTLE_CENTER_SPAWN = { col: 14, row: 20 };
 
 /** First walkable tile on the path out of the pen (up the left exit lane) */
@@ -61,29 +61,12 @@ export const BATTLE_START_OFFSETS: { dx: number; dy: number }[] = [
 
 /** Classic spawn positions (tile coordinates) */
 export const CLASSIC_SPAWNS: { col: number; row: number }[] = [
-  { col: 14, row: 33 }, // Pac-Man start (bottom corridor)
-  { col: 14, row: 20 }, // Blinky (ghost box)
-  { col: 14, row: 20 }, // Pinky (ghost box)
-  { col: 12, row: 17 }, // Inky
-  { col: 16, row: 17 }, // Clyde
+  { col: 14, row: 33 },
+  { col: 14, row: 20 },
+  { col: 14, row: 20 },
+  { col: 14, row: 17 },
+  { col: 14, row: 17 },
 ];
-
-/** Wrap tunnel row — ghost-house corridor with side wrap (`      .   |______|   .      `) */
-export const TUNNEL_ROW = 17;
-/** Middle corridor used for the visible left/right tunnels (no wrap on this row) */
-export const SIDE_TUNNEL_ROW = 11;
-export const TUNNEL_LEFT_MIN = 1;
-export const TUNNEL_LEFT_MAX = 6;
-export const TUNNEL_RIGHT_MIN = 21;
-export const TUNNEL_RIGHT_MAX = 26;
-const TUNNEL_WRAP_DELTA = TUNNEL_RIGHT_MAX - TUNNEL_LEFT_MIN + 1;
-
-export function isTunnelMouthColumn(col: number): boolean {
-  return (
-    (col >= TUNNEL_LEFT_MIN && col <= TUNNEL_LEFT_MAX) ||
-    (col >= TUNNEL_RIGHT_MIN && col <= TUNNEL_RIGHT_MAX)
-  );
-}
 
 export function tileAt(col: number, row: number): string {
   if (row < 0 || row >= MAZE_ROWS || col < 0 || col >= MAZE_COLS) return '_';
@@ -104,23 +87,16 @@ export function isWalkable(col: number, row: number): boolean {
   return t === ' ' || t === '.' || t === 'o' || t === '-';
 }
 
-export function isTunnelRow(row: number): boolean {
-  return row === TUNNEL_ROW;
+/** No warp tunnels in the enclosed layout */
+export function isTunnelRow(_row: number): boolean {
+  return false;
 }
 
-/** Wrap column when entering/exiting the left or right tunnel mouth */
-export function wrapCol(col: number, row: number): number {
-  if (!isTunnelRow(row)) return col;
-  if (col < TUNNEL_LEFT_MIN) return col + TUNNEL_WRAP_DELTA;
-  if (col > TUNNEL_RIGHT_MAX) return col - TUNNEL_WRAP_DELTA;
+export function wrapCol(col: number, _row: number): number {
   return col;
 }
 
-/** Wrap world X on the tunnel row (continuous position) */
-export function wrapWorldX(x: number, row: number): number {
-  if (!isTunnelRow(row)) return x;
-  if (x < TUNNEL_LEFT_MIN) return x + TUNNEL_WRAP_DELTA;
-  if (x >= TUNNEL_RIGHT_MAX + 1) return x - TUNNEL_WRAP_DELTA;
+export function wrapWorldX(x: number, _row: number): number {
   return x;
 }
 

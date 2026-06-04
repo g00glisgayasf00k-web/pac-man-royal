@@ -13,7 +13,7 @@ const STEPS = [
   },
   {
     title: 'Controls',
-    body: 'Desktop: arrow keys. Mobile: swipe on the maze to move. Use the left/right side tunnels in the middle corridor to cross the map.',
+    body: 'Desktop: arrow keys. Mobile: swipe on the maze to move.',
     icon: '🕹️',
   },
 ];
