@@ -1,5 +1,5 @@
 /**
- * Classic Pac-Man maze (28×36) — enclosed border, no side warp tunnels.
+ * Classic Pac-Man arcade maze (28×36) — authentic ROM layout.
  * | wall   _ out-of-bounds   (space) walkable   . pellet   o power   - ghost gate
  */
 export const MAZE_LAYOUT: string[] = [
@@ -14,13 +14,13 @@ export const MAZE_LAYOUT: string[] = [
   '|..........................|',
   '|.||||.||.||||||||.||.||||.|',
   '|.||||.||.||||||||.||.||||.|',
-  '||||||.||....||....||....|||',
+  '|......||....||....||......|',
   '||||||.||||| || |||||.||||||',
   '_____|.||||| || |||||.|_____',
   '_____|.||          ||.|_____',
   '_____|.|| |||--||| ||.|_____',
   '||||||.|| |______| ||.||||||',
-  '||||||.||          ||.||||||',
+  '      .   |______|   .      ',
   '||||||.|| |______| ||.||||||',
   '_____|.|| |||||||| ||.|_____',
   '_____|.||          ||.|_____',
@@ -32,7 +32,7 @@ export const MAZE_LAYOUT: string[] = [
   '|o..||.......  .......||..o|',
   '|||.||.||.||||||||.||.||.|||',
   '|||.||.||.||||||||.||.||.|||',
-  '|.||||.||....||....||.||||.|',
+  '|......||....||....||......|',
   '|.||||||||||.||.||||||||||.|',
   '|.||||||||||.||.||||||||||.|',
   '|..........................|',
@@ -44,29 +44,50 @@ export const MAZE_LAYOUT: string[] = [
 export const MAZE_ROWS = MAZE_LAYOUT.length;
 export const MAZE_COLS = MAZE_LAYOUT[0].length;
 
-/** Central box floor inside the ghost house */
-export const BATTLE_CENTER_SPAWN = { col: 14, row: 20 };
+/** Open floor inside the ghost-house centre box (below the pink gate) */
+export const GHOST_PEN_FLOOR_ROW = 20;
+export const GHOST_PEN_GATE_ROW = 15;
+
+/** @deprecated Use GHOST_PEN_FLOOR_ROW — kept for imports */
+export const BATTLE_CENTER_SPAWN = { col: 14, row: GHOST_PEN_FLOOR_ROW };
 
 /** First walkable tile on the path out of the pen (up the left exit lane) */
 export const GHOST_PEN_EXIT_TILE = { col: 9, row: 11 };
 
-/** Tiny offsets so stacked sprites remain visible in the same tile */
-export const BATTLE_START_OFFSETS: { dx: number; dy: number }[] = [
-  { dx: 0, dy: 0 },
-  { dx: -0.18, dy: -0.14 },
-  { dx: 0.18, dy: -0.14 },
-  { dx: -0.18, dy: 0.14 },
-  { dx: 0.18, dy: 0.14 },
+/** Side tunnel row — `......||....||....||......` */
+export const TUNNEL_ROW = 11;
+/** Ghost-house warp corridor — `      .   |______|   .      ` */
+export const GHOST_TUNNEL_ROW = 17;
+
+export const TUNNEL_LEFT_MIN = 0;
+export const TUNNEL_LEFT_MAX = 6;
+export const TUNNEL_RIGHT_MIN = 21;
+export const TUNNEL_RIGHT_MAX = 26;
+const TUNNEL_WRAP_DELTA = TUNNEL_RIGHT_MAX - TUNNEL_LEFT_MIN + 1;
+
+/** One tile per player slot on the pen floor (not row 14 above the gate) */
+export const GHOST_PEN_SPAWN_TILES: { col: number; row: number }[] = [
+  { col: 14, row: GHOST_PEN_FLOOR_ROW },
+  { col: 12, row: GHOST_PEN_FLOOR_ROW },
+  { col: 16, row: GHOST_PEN_FLOOR_ROW },
+  { col: 13, row: GHOST_PEN_FLOOR_ROW },
+  { col: 15, row: GHOST_PEN_FLOOR_ROW },
 ];
 
-/** Classic spawn positions (tile coordinates) */
 export const CLASSIC_SPAWNS: { col: number; row: number }[] = [
   { col: 14, row: 33 },
   { col: 14, row: 20 },
   { col: 14, row: 20 },
-  { col: 14, row: 17 },
-  { col: 14, row: 17 },
+  { col: 12, row: 17 },
+  { col: 16, row: 17 },
 ];
+
+export function isTunnelMouthColumn(col: number): boolean {
+  return (
+    (col >= TUNNEL_LEFT_MIN && col <= TUNNEL_LEFT_MAX) ||
+    (col >= TUNNEL_RIGHT_MIN && col <= TUNNEL_RIGHT_MAX)
+  );
+}
 
 export function tileAt(col: number, row: number): string {
   if (row < 0 || row >= MAZE_ROWS || col < 0 || col >= MAZE_COLS) return '_';
@@ -87,16 +108,21 @@ export function isWalkable(col: number, row: number): boolean {
   return t === ' ' || t === '.' || t === 'o' || t === '-';
 }
 
-/** No warp tunnels in the enclosed layout */
-export function isTunnelRow(_row: number): boolean {
-  return false;
+export function isTunnelRow(row: number): boolean {
+  return row === TUNNEL_ROW || row === GHOST_TUNNEL_ROW;
 }
 
-export function wrapCol(col: number, _row: number): number {
+export function wrapCol(col: number, row: number): number {
+  if (!isTunnelRow(row)) return col;
+  if (col < TUNNEL_LEFT_MIN) return col + TUNNEL_WRAP_DELTA;
+  if (col > TUNNEL_RIGHT_MAX) return col - TUNNEL_WRAP_DELTA;
   return col;
 }
 
-export function wrapWorldX(x: number, _row: number): number {
+export function wrapWorldX(x: number, row: number): number {
+  if (!isTunnelRow(row)) return x;
+  if (x < TUNNEL_LEFT_MIN) return x + TUNNEL_WRAP_DELTA;
+  if (x >= TUNNEL_RIGHT_MAX + 1) return x - TUNNEL_WRAP_DELTA;
   return x;
 }
 
@@ -108,26 +134,19 @@ export function worldToTile(x: number, y: number): { col: number; row: number } 
   return { col: Math.floor(x), row: Math.floor(y) };
 }
 
-/** True inside the central box, gate, or side exit lanes */
 export function isGhostPenArea(col: number, row: number): boolean {
-  if (row === BATTLE_CENTER_SPAWN.row && col >= 9 && col <= 17) return true;
-  if (row === BATTLE_CENTER_SPAWN.row + 1 && col >= 13 && col <= 15 && isGate(col, row)) return true;
-  if ((col === 9 || col === 18) && row >= 11 && row <= BATTLE_CENTER_SPAWN.row + 1) return true;
+  if (row === GHOST_PEN_FLOOR_ROW && col >= 9 && col <= 17) return true;
+  if (row === GHOST_PEN_GATE_ROW && col >= 13 && col <= 15) return true;
+  if ((col === 9 || col === 18) && row >= 11 && row <= GHOST_PEN_FLOOR_ROW + 1) return true;
   return false;
 }
 
 export function getBattleStartPosition(slot: number): { x: number; y: number } {
-  const center = tileCenter(BATTLE_CENTER_SPAWN.col, BATTLE_CENTER_SPAWN.row);
-  const off = BATTLE_START_OFFSETS[slot % BATTLE_START_OFFSETS.length];
-  let x = center.x + off.dx;
-  let y = center.y + off.dy;
-  const { col, row } = { col: Math.floor(x), row: Math.floor(y) };
-  if (!isWalkable(col, row)) {
-    const c = tileCenter(BATTLE_CENTER_SPAWN.col, BATTLE_CENTER_SPAWN.row);
-    x = c.x;
-    y = c.y;
+  const tile = GHOST_PEN_SPAWN_TILES[slot % GHOST_PEN_SPAWN_TILES.length];
+  if (isWalkable(tile.col, tile.row)) {
+    return tileCenter(tile.col, tile.row);
   }
-  return { x, y };
+  return tileCenter(BATTLE_CENTER_SPAWN.col, GHOST_PEN_FLOOR_ROW);
 }
 
 export function findSpawnPoints(): { col: number; row: number }[] {

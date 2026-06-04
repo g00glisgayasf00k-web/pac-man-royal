@@ -1,70 +1,105 @@
 import { GameSnapshot, TILE_SIZE } from '../../../shared/gameTypes';
 import { FruitKind } from '../../../shared/fruits';
-import { MAZE_COLS, MAZE_LAYOUT, MAZE_ROWS, tileAt } from '../../../shared/maze';
+import { MAZE_COLS, MAZE_ROWS, isWalkable, tileAt } from '../../../shared/maze';
 
-const PELLET_COLOR = '#ffb8ae';
+const PELLET_COLOR = '#ffd040';
+const POWER_PELLET_COLOR = '#ffffff';
 const WALL_COLOR = '#2121de';
+const GATE_COLOR = '#ff66aa';
 const MAZE_W = MAZE_COLS * TILE_SIZE;
 const MAZE_H = MAZE_ROWS * TILE_SIZE;
 
-function isPathTile(col: number, row: number): boolean {
+let mazeBg: HTMLImageElement | null = null;
+let mazeBgStarted = false;
+
+function getMazeBackground(): HTMLImageElement | null {
+  if (mazeBg?.complete) return mazeBg;
+  if (!mazeBgStarted) {
+    mazeBgStarted = true;
+    mazeBg = new Image();
+    mazeBg.src = '/maze-bg.png';
+  }
+  return mazeBg?.complete ? mazeBg : null;
+}
+
+/** Underscore tiles are blocked but only drawn when bordering a walkable tile (ghost-house bars). */
+function isRenderWall(col: number, row: number): boolean {
   const t = tileAt(col, row);
-  return t === ' ' || t === '.' || t === 'o' || t === '-';
+  if (t === '|') return true;
+  if (t !== '_') return false;
+  return (
+    isWalkable(col - 1, row) ||
+    isWalkable(col + 1, row) ||
+    isWalkable(col, row - 1) ||
+    isWalkable(col, row + 1)
+  );
+}
+
+function drawWallLines(ctx: CanvasRenderingContext2D, col: number, row: number) {
+  const ts = TILE_SIZE;
+  const pad = 2;
+  const gap = 3;
+  const x = col * ts;
+  const y = row * ts;
+  const segs: [number, number, number, number][] = [];
+
+  if (isWalkable(col, row - 1)) {
+    segs.push([x + pad, y + pad, x + ts - pad, y + pad]);
+    segs.push([x + pad, y + pad + gap, x + ts - pad, y + pad + gap]);
+  }
+  if (isWalkable(col, row + 1)) {
+    segs.push([x + pad, y + ts - pad, x + ts - pad, y + ts - pad]);
+    segs.push([x + pad, y + ts - pad - gap, x + ts - pad, y + ts - pad - gap]);
+  }
+  if (isWalkable(col - 1, row)) {
+    segs.push([x + pad, y + pad, x + pad, y + ts - pad]);
+    segs.push([x + pad + gap, y + pad, x + pad + gap, y + ts - pad]);
+  }
+  if (isWalkable(col + 1, row)) {
+    segs.push([x + ts - pad, y + pad, x + ts - pad, y + ts - pad]);
+    segs.push([x + ts - pad - gap, y + pad, x + ts - pad - gap, y + ts - pad]);
+  }
+
+  ctx.strokeStyle = WALL_COLOR;
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'square';
+  for (const [x0, y0, x1, y1] of segs) {
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+  }
 }
 
 function drawMazeWalls(ctx: CanvasRenderingContext2D) {
   const ts = TILE_SIZE;
-  const pad = 2;
-  const gap = 3;
-  ctx.strokeStyle = WALL_COLOR;
-  ctx.lineWidth = 2;
-  ctx.lineCap = 'square';
-
   for (let row = 0; row < MAZE_ROWS; row++) {
     for (let col = 0; col < MAZE_COLS; col++) {
-      if (MAZE_LAYOUT[row][col] !== '|') continue;
-      const x = col * ts;
-      const y = row * ts;
-      const segs: [number, number, number, number][] = [];
-      if (isPathTile(col, row - 1)) {
-        segs.push([x + pad, y + pad, x + ts - pad, y + pad]);
-        segs.push([x + pad, y + pad + gap, x + ts - pad, y + pad + gap]);
-      }
-      if (isPathTile(col, row + 1)) {
-        segs.push([x + pad, y + ts - pad, x + ts - pad, y + ts - pad]);
-        segs.push([x + pad, y + ts - pad - gap, x + ts - pad, y + ts - pad - gap]);
-      }
-      if (isPathTile(col - 1, row)) {
-        segs.push([x + pad, y + pad, x + pad, y + ts - pad]);
-        segs.push([x + pad + gap, y + pad, x + pad + gap, y + ts - pad]);
-      }
-      if (isPathTile(col + 1, row)) {
-        segs.push([x + ts - pad, y + pad, x + ts - pad, y + ts - pad]);
-        segs.push([x + ts - pad - gap, y + pad, x + ts - pad - gap, y + ts - pad]);
-      }
-      for (const [x0, y0, x1, y1] of segs) {
+      const t = tileAt(col, row);
+      if (t === '-') {
+        const y = row * ts + ts / 2;
+        ctx.strokeStyle = GATE_COLOR;
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(x0, y0);
-        ctx.lineTo(x1, y1);
+        ctx.moveTo(col * ts + 2, y);
+        ctx.lineTo(col * ts + ts - 2, y);
         ctx.stroke();
+      } else if (isRenderWall(col, row)) {
+        drawWallLines(ctx, col, row);
       }
     }
   }
+}
 
-  for (let row = 0; row < MAZE_ROWS; row++) {
-    for (let col = 0; col < MAZE_COLS; col++) {
-      if (tileAt(col, row) !== '-') continue;
-      const y = row * ts + ts / 2;
-      const x0 = col * ts + 2;
-      const x1 = col * ts + ts - 2;
-      ctx.strokeStyle = '#fff';
-      ctx.beginPath();
-      ctx.moveTo(x0, y);
-      ctx.lineTo(x1, y);
-      ctx.stroke();
-      ctx.strokeStyle = WALL_COLOR;
-    }
+function drawMaze(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, MAZE_W, MAZE_H);
+  const bg = getMazeBackground();
+  if (bg) {
+    ctx.drawImage(bg, 0, 0, MAZE_W, MAZE_H);
+    return;
   }
+  drawMazeWalls(ctx);
 }
 
 const FRUIT_SPRITE_PATHS: Record<FruitKind, string> = {
@@ -74,24 +109,12 @@ const FRUIT_SPRITE_PATHS: Record<FruitKind, string> = {
   lemon: '/lemon.svg',
 };
 
-let mazeBg: HTMLImageElement | null = null;
-let bgLoadStarted = false;
 const fruitSprites: Partial<Record<FruitKind, HTMLImageElement>> = {};
 const fruitLoadStarted = new Set<FruitKind>();
 
 let pelletLayer: OffscreenCanvas | HTMLCanvasElement | null = null;
 let pelletLayerCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
 let cachedPelletRevision = -1;
-
-function getMazeBackground(): HTMLImageElement | null {
-  if (mazeBg?.complete) return mazeBg;
-  if (!bgLoadStarted) {
-    bgLoadStarted = true;
-    mazeBg = new Image();
-    mazeBg.src = '/maze-bg.png';
-  }
-  return mazeBg?.complete ? mazeBg : null;
-}
 
 function getFruitSprite(kind: FruitKind): HTMLImageElement | null {
   const cached = fruitSprites[kind];
@@ -118,7 +141,7 @@ function ensurePelletLayer(snap: GameSnapshot) {
         : document.createElement('canvas');
     pelletLayer.width = MAZE_W;
     pelletLayer.height = MAZE_H;
-    pelletLayerCtx = pelletLayer.getContext('2d');
+    pelletLayerCtx = pelletLayer.getContext('2d') as CanvasRenderingContext2D | null;
     if (pelletLayerCtx) pelletLayerCtx.imageSmoothingEnabled = false;
   }
   const layer = pelletLayerCtx;
@@ -138,21 +161,20 @@ function ensurePelletLayer(snap: GameSnapshot) {
     }
   }
 
-  layer.beginPath();
+  layer.fillStyle = POWER_PELLET_COLOR;
   for (let row = 0; row < MAZE_ROWS; row++) {
     for (let col = 0; col < MAZE_COLS; col++) {
       if (snap.powerPellets[row]?.[col]) {
         const cx = col * ts + ts / 2;
         const cy = row * ts + ts / 2;
-        layer.moveTo(cx + 5.5, cy);
+        layer.beginPath();
         layer.arc(cx, cy, 5.5, 0, Math.PI * 2);
+        layer.fill();
       }
     }
   }
-  layer.fill();
 }
 
-/** Snap entity centers to half-pixels to stop sub-pixel flicker when scaled */
 function snapEntityPx(tileX: number, tileY: number) {
   return {
     x: Math.round(tileX * TILE_SIZE * 2) / 2,
@@ -176,14 +198,7 @@ export function renderGame(ctx: CanvasRenderingContext2D, snap: GameSnapshot, wi
   ctx.translate(offsetX, offsetY);
   ctx.scale(scale, scale);
 
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, canvasW, canvasH);
-  const bg = getMazeBackground();
-  if (bg) {
-    ctx.drawImage(bg, 0, 0, canvasW, canvasH);
-  } else {
-    drawMazeWalls(ctx);
-  }
+  drawMaze(ctx);
 
   ensurePelletLayer(snap);
   if (pelletLayer) {
@@ -233,16 +248,10 @@ function drawFruitFallback(
     ctx.quadraticCurveTo(0, -14, 8, -10);
     ctx.stroke();
     ctx.fillStyle = '#ff4444';
-    ctx.strokeStyle = '#660000';
-    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(-5, 2, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
     ctx.arc(5, 2, 6, 0, Math.PI * 2);
     ctx.fill();
-    ctx.stroke();
   } else if (kind === 'orange') {
     ctx.fillStyle = '#ff8800';
     ctx.beginPath();
@@ -266,6 +275,7 @@ function drawFruitFallback(
 function drawPlayers(ctx: CanvasRenderingContext2D, snap: GameSnapshot) {
   const animT = performance.now() * 0.008;
   const now = Date.now();
+
   for (const p of snap.players) {
     const { x, y } = snapEntityPx(p.x, p.y);
     const isPac = p.id === snap.pacmanId && p.role === 'pacman';
@@ -322,7 +332,7 @@ function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, color: s
   const r = TILE_SIZE * 0.4;
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(x, y - 2, r, Math.PI, 0);
+  ctx.arc(x, y - r * 0.15, r, Math.PI, 0);
   ctx.lineTo(x + r, y + r * 0.55);
   for (let i = 0; i < 4; i++) {
     const bx = x + r - (i * (2 * r)) / 3;
@@ -334,8 +344,8 @@ function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, color: s
 
   ctx.fillStyle = '#fff';
   ctx.beginPath();
-  ctx.arc(x - 5, y - 2, 4.5, 0, Math.PI * 2);
-  ctx.arc(x + 5, y - 2, 4.5, 0, Math.PI * 2);
+  ctx.arc(x - 5, y - r * 0.15, 4.5, 0, Math.PI * 2);
+  ctx.arc(x + 5, y - r * 0.15, 4.5, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = '#2121ff';
   ctx.beginPath();

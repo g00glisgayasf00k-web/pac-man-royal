@@ -1,5 +1,6 @@
-"""Render classic Pac-Man maze to PNG for use as game background."""
+"""Render classic Pac-Man maze (double blue lines) to PNG."""
 from PIL import Image, ImageDraw
+import os
 
 ROWS = [
   '____________________________',
@@ -13,13 +14,13 @@ ROWS = [
   '|..........................|',
   '|.||||.||.||||||||.||.||||.|',
   '|.||||.||.||||||||.||.||||.|',
-  '||||||.||....||....||....|||',
+  '|......||....||....||......|',
   '||||||.||||| || |||||.||||||',
   '_____|.||||| || |||||.|_____',
   '_____|.||          ||.|_____',
   '_____|.|| |||--||| ||.|_____',
   '||||||.|| |______| ||.||||||',
-  '||||||.||          ||.||||||',
+  '      .   |______|   .      ',
   '||||||.|| |______| ||.||||||',
   '_____|.|| |||||||| ||.|_____',
   '_____|.||          ||.|_____',
@@ -31,7 +32,7 @@ ROWS = [
   '|o..||.......  .......||..o|',
   '|||.||.||.||||||||.||.||.|||',
   '|||.||.||.||||||||.||.||.|||',
-  '|.||||.||....||....||.||||.|',
+  '|......||....||....||......|',
   '|.||||||||||.||.||||||||||.|',
   '|.||||||||||.||.||||||||||.|',
   '|..........................|',
@@ -40,52 +41,66 @@ ROWS = [
   '____________________________',
 ]
 
+WALKABLE = set(' .o-')
+
+
+def tile_at(col, row):
+    if row < 0 or row >= len(ROWS) or col < 0 or col >= 28:
+        return '_'
+    return ROWS[row][col]
+
+
+def is_walkable(col, row):
+    return tile_at(col, row) in WALKABLE
+
+
+def is_render_wall(col, row):
+    t = tile_at(col, row)
+    if t == '|':
+        return True
+    if t != '_':
+        return False
+    return (
+        is_walkable(col - 1, row)
+        or is_walkable(col + 1, row)
+        or is_walkable(col, row - 1)
+        or is_walkable(col, row + 1)
+    )
+
+
 TS = 16
 W, H = 28 * TS, 36 * TS
 img = Image.new('RGB', (W, H), (0, 0, 0))
 draw = ImageDraw.Draw(img)
 WALL = (33, 33, 222)
-PELLET = (255, 184, 174)
+GATE = (255, 102, 170)
+PAD, GAP = 2, 3
 
-def is_wall(c, r):
-    if r < 0 or r >= len(ROWS) or c < 0 or c >= 28:
-        return True
-    return ROWS[r][c] in '|_'
 
-def is_path(c, r):
-    if r < 0 or r >= len(ROWS) or c < 0 or c >= 28:
-        return False
-    return ROWS[r][c] in ' .o-'
+def draw_wall_lines(col, row):
+    x, y = col * TS, row * TS
+    segs = []
+    if is_walkable(col, row - 1):
+        segs += [(x + PAD, y + PAD, x + TS - PAD, y + PAD), (x + PAD, y + PAD + GAP, x + TS - PAD, y + PAD + GAP)]
+    if is_walkable(col, row + 1):
+        segs += [(x + PAD, y + TS - PAD, x + TS - PAD, y + TS - PAD), (x + PAD, y + TS - PAD - GAP, x + TS - PAD, y + TS - PAD - GAP)]
+    if is_walkable(col - 1, row):
+        segs += [(x + PAD, y + PAD, x + PAD, y + TS - PAD), (x + PAD + GAP, y + PAD, x + PAD + GAP, y + TS - PAD)]
+    if is_walkable(col + 1, row):
+        segs += [(x + TS - PAD, y + PAD, x + TS - PAD, y + TS - PAD), (x + TS - PAD - GAP, y + PAD, x + TS - PAD - GAP, y + TS - PAD)]
+    for s in segs:
+        draw.line(s, fill=WALL, width=2)
+
 
 for row in range(len(ROWS)):
     for col in range(28):
-        t = ROWS[row][col]
-        cx, cy = col * TS + TS // 2, row * TS + TS // 2
-        if t != '|':
-            continue
-        x, y = col * TS, row * TS
-        pad, gap = 2, 3
-        segs = []
-        if is_path(col, row - 1):
-            segs += [(x + pad, y + pad, x + TS - pad, y + pad), (x + pad, y + pad + gap, x + TS - pad, y + pad + gap)]
-        if is_path(col, row + 1):
-            segs += [(x + pad, y + TS - pad, x + TS - pad, y + TS - pad), (x + pad, y + TS - pad - gap, x + TS - pad, y + TS - pad - gap)]
-        if is_path(col - 1, row):
-            segs += [(x + pad, y + pad, x + pad, y + TS - pad), (x + pad + gap, y + pad, x + pad + gap, y + TS - pad)]
-        if is_path(col + 1, row):
-            segs += [(x + TS - pad, y + pad, x + TS - pad, y + TS - pad), (x + TS - pad - gap, y + pad, x + TS - pad - gap, y + TS - pad)]
-        for s in segs:
-            draw.line(s, fill=WALL, width=2)
-
-# ghost gate
-for row in range(len(ROWS)):
-    for col in range(28):
-        if ROWS[row][col] == '-':
+        t = tile_at(col, row)
+        if t == '-':
             y = row * TS + TS // 2
-            x0, x1 = col * TS + 2, col * TS + TS - 2
-            draw.line([(x0, y), (x1, y)], fill=(255, 255, 255), width=2)
+            draw.line([(col * TS + 2, y), (col * TS + TS - 2, y)], fill=GATE, width=3)
+        elif is_render_wall(col, row):
+            draw_wall_lines(col, row)
 
-import os
 out = os.path.join(os.path.dirname(__file__), '..', 'client', 'public', 'maze-bg.png')
 os.makedirs(os.path.dirname(out), exist_ok=True)
 img.save(out)

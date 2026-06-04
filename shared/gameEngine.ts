@@ -16,19 +16,19 @@ import {
   MATCH_DURATION_MS,
   PELLET_RESPAWN_MS,
   RESPAWN_MS,
-} from './gameTypes';
+} from './gameTypes.js';
 import {
   FRUIT_POINTS,
   FruitState,
   getFruitSpawnCandidates,
   pickRandomFruitKind,
-} from './fruits';
+} from './fruits.js';
 import {
   chooseGhostDirection,
   choosePacmanDirection,
   oppositeDir,
   type ActorTile,
-} from './ai';
+} from './ai.js';
 import {
   getBattleStartPosition,
   isTunnelRow,
@@ -41,7 +41,7 @@ import {
   MAZE_ROWS,
   tileCenter,
   worldToTile,
-} from './maze';
+} from './maze.js';
 
 const DIRS: Record<Direction, { dx: number; dy: number }> = {
   up: { dx: 0, dy: -1 },

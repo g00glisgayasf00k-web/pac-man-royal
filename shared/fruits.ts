@@ -1,4 +1,4 @@
-import { isWalkable, MAZE_COLS, MAZE_ROWS } from './maze';
+import { isWalkable, MAZE_COLS, MAZE_ROWS } from './maze.js';
 
 export type FruitKind = 'cherry' | 'orange' | 'apple' | 'lemon';
 

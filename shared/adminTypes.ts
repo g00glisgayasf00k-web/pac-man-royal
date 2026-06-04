@@ -1,4 +1,4 @@
-import type { LeaderboardMode } from './leaderboardTypes';
+import type { LeaderboardMode } from './leaderboardTypes.js';
 
 export interface AdminModeStats {
   mode: LeaderboardMode;

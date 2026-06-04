@@ -1,11 +1,20 @@
-import { Direction } from './gameTypes';
+import { Direction } from './gameTypes.js';
 import {
   GHOST_PEN_EXIT_TILE,
+  GHOST_TUNNEL_ROW,
   isGhostPenArea,
+  isTunnelMouthColumn,
+  isTunnelRow,
   isWalkable,
   MAZE_COLS,
   MAZE_ROWS,
-} from './maze';
+  TUNNEL_LEFT_MAX,
+  TUNNEL_LEFT_MIN,
+  TUNNEL_RIGHT_MAX,
+  TUNNEL_RIGHT_MIN,
+  TUNNEL_ROW,
+  wrapCol,
+} from './maze.js';
 
 const DIRS: Direction[] = ['up', 'down', 'left', 'right'];
 const DELTAS: Record<Direction, { dx: number; dy: number }> = {
@@ -34,7 +43,7 @@ function key(col: number, row: number) {
 function stepTile(col: number, row: number, dir: Direction): { col: number; row: number } | null {
   const { dx, dy } = DELTAS[dir];
   const nr = row + dy;
-  const nc = col + dx;
+  const nc = dy === 0 && isTunnelRow(row) ? wrapCol(col + dx, row) : col + dx;
   if (!isWalkable(nc, nr)) return null;
   return { col: nc, row: nr };
 }
@@ -51,6 +60,78 @@ function clampTile(col: number, row: number): { col: number; row: number } {
   while (!isWalkable(c, r) && c < MAZE_COLS - 1) c++;
   while (!isWalkable(c, r) && c > 0) c--;
   return { col: c, row: r };
+}
+
+function snapMouthCol(col: number): number {
+  if (col <= (TUNNEL_LEFT_MAX + TUNNEL_RIGHT_MIN) / 2) {
+    return Math.max(TUNNEL_LEFT_MIN, Math.min(col, TUNNEL_LEFT_MAX));
+  }
+  return Math.max(TUNNEL_RIGHT_MIN, Math.min(col, TUNNEL_RIGHT_MAX));
+}
+
+function wantsHorizontalCross(col: number, targetCol: number, targetRow: number, tunnelRow: number): boolean {
+  if (targetRow === tunnelRow && targetCol !== col) return true;
+  const onLeft = col <= TUNNEL_LEFT_MAX;
+  const targetOnLeft = targetCol <= TUNNEL_LEFT_MAX;
+  return onLeft !== targetOnLeft;
+}
+
+function approachTunnelRow(
+  col: number,
+  row: number,
+  targetCol: number,
+  targetRow: number,
+  tunnelRow: number,
+  approachRows: number[],
+  forbid: Direction
+): Direction {
+  if (row === tunnelRow || !approachRows.includes(row)) return 'none';
+  if (!isTunnelMouthColumn(col) && !isTunnelMouthColumn(targetCol)) return 'none';
+  if (!wantsHorizontalCross(col, targetCol, targetRow, tunnelRow)) return 'none';
+
+  const mouthCol = snapMouthCol(targetCol);
+  if (col !== mouthCol) {
+    const hDir: Direction = mouthCol > col ? 'right' : 'left';
+    if (hDir !== forbid) {
+      const h = stepTile(col, row, hDir);
+      if (h && isWalkable(h.col, h.row)) return hDir;
+    }
+  }
+
+  const vDir: Direction = tunnelRow > row ? 'down' : 'up';
+  if (vDir === forbid) return 'none';
+  const v = stepTile(col, row, vDir);
+  if (v && v.row === tunnelRow && isWalkable(v.col, v.row)) return vDir;
+  return 'none';
+}
+
+function tunnelApproachDirection(
+  col: number,
+  row: number,
+  targetCol: number,
+  targetRow: number,
+  forbid: Direction
+): Direction {
+  const side = approachTunnelRow(
+    col,
+    row,
+    targetCol,
+    targetRow,
+    TUNNEL_ROW,
+    [TUNNEL_ROW - 1, TUNNEL_ROW + 1],
+    forbid
+  );
+  if (side !== 'none') return side;
+
+  return approachTunnelRow(
+    col,
+    row,
+    targetCol,
+    targetRow,
+    GHOST_TUNNEL_ROW,
+    [GHOST_TUNNEL_ROW - 1, GHOST_TUNNEL_ROW + 1],
+    forbid
+  );
 }
 
 /** One BFS from start — tile distances for all reachable cells */
@@ -217,7 +298,22 @@ export function chooseGhostDirection(
   const col = Math.floor(ghost.x);
   const row = Math.floor(ghost.y);
   const forbid = ghost.dir !== 'none' ? oppositeDir(ghost.dir) : 'none';
+
+  if (isGhostPenArea(col, row)) {
+    const exitDir = bfsFirstDirection(
+      col,
+      row,
+      GHOST_PEN_EXIT_TILE.col,
+      GHOST_PEN_EXIT_TILE.row,
+      forbid
+    );
+    if (exitDir !== 'none') return exitDir;
+  }
+
   const target = getGhostTargetTile({ ghost, pac, blinky });
+
+  const tunnelDir = tunnelApproachDirection(col, row, target.col, target.row, forbid);
+  if (tunnelDir !== 'none') return tunnelDir;
 
   const pathDir = bfsFirstDirection(col, row, target.col, target.row, forbid);
   if (pathDir !== 'none') return pathDir;
@@ -295,6 +391,9 @@ export function choosePacmanDirection(
       }
     }
   }
+
+  const tunnelDir = tunnelApproachDirection(col, row, bestCol, bestRow, forbid);
+  if (tunnelDir !== 'none') return tunnelDir;
 
   const huntDir = bfsFirstDirection(col, row, bestCol, bestRow, forbid);
   if (huntDir !== 'none') return huntDir;

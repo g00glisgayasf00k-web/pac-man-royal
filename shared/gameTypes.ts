@@ -1,4 +1,4 @@
-import type { FruitState } from './fruits';
+import type { FruitState } from './fruits.js';
 
 export const PELLET_POINTS = 10;
 export const POWER_PELLET_POINTS = 50;
