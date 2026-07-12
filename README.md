@@ -33,3 +33,5 @@ cd android-app
 ```
 
 Output: `android-apk/Pac-Royal.apk`
+
+GitHub Actions also builds the APK on every push to `main` (workflow: **Build Android APK**). Download it from the run’s **Artifacts** tab as `Pac-Royal-apk`.

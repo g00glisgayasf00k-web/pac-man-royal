@@ -1,0 +1,80 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    name: Assemble Pac-Royal APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+            android-app/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Python deps (icons)
+        run: pip install pillow
+
+      - name: Install root + client deps
+        run: |
+          npm ci
+          npm ci --prefix client
+
+      - name: Install Android Capacitor deps
+        run: npm ci --prefix android-app
+
+      - name: Generate launcher icons
+        run: python android-app/scripts/generate_android_icons.py
+
+      - name: Build web client
+        env:
+          VITE_SERVER_URL: ${{ secrets.VITE_SERVER_URL }}
+        run: npm run build --prefix client
+
+      - name: Capacitor sync Android
+        working-directory: android-app
+        run: npx cap sync android
+
+      - name: Make gradlew executable
+        run: chmod +x android-app/android/gradlew
+
+      - name: Build debug APK
+        working-directory: android-app/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Copy APK
+        run: |
+          mkdir -p android-apk
+          cp android-app/android/app/build/outputs/apk/debug/app-debug.apk android-apk/Pac-Royal.apk
+          ls -lh android-apk/Pac-Royal.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pac-Royal-apk
+          path: android-apk/Pac-Royal.apk
+          if-no-files-found: error
+          retention-days: 30
