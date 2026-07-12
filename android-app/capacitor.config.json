@@ -1,0 +1,11 @@
+{
+  "appId": "com.pacmanbattleroyale.game",
+  "appName": "Pac-Royal",
+  "webDir": "../client/dist",
+  "android": {
+    "allowMixedContent": true
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

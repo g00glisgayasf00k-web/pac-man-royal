@@ -4,12 +4,14 @@ import type {
   AdminUsersResponse,
 } from '../../../shared/adminTypes';
 import type { AuthSession } from '../auth/types';
+import { getServerUrl } from '../config/api';
 
-const API_BASE =
-  import.meta.env.VITE_SERVER_URL ??
-  (import.meta.env.DEV ? 'http://localhost:3001' : window.location.origin);
+const API_BASE = getServerUrl();
 
 async function request<T>(path: string, token: string, init?: RequestInit): Promise<T> {
+  if (!API_BASE) {
+    throw new Error('Server not configured');
+  }
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {

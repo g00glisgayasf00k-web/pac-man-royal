@@ -29,10 +29,9 @@ import { useSwipeInput } from './hooks/useSwipeInput';
 import { recordGameResult } from './auth/api';
 import { loadSession } from './auth/session';
 import type { AuthUser } from './auth/types';
+import { getServerUrl } from './config/api';
 
-const SERVER_URL =
-  import.meta.env.VITE_SERVER_URL ??
-  (import.meta.env.DEV ? 'http://localhost:3001' : window.location.origin);
+const SERVER_URL = getServerUrl();
 
 type Screen = 'game' | 'win';
 
@@ -384,7 +383,7 @@ export default function GameApp({
         <button type="button" className="btn-exit" onClick={exitToWelcome}>
           MENU
         </button>
-        <span className="mobile-top-bar__title">PAC-MAN BATTLE ROYALE</span>
+        <span className="mobile-top-bar__title">PAC-ROYAL</span>
         {mode === 'local' && (
           <span className="mobile-top-bar__tag">
             {soloDifficultyLabel(soloLaunchRef.current.difficulty)}

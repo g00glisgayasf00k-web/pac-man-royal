@@ -93,7 +93,7 @@ async function start() {
   }
 
   httpServer.listen(PORT, () => {
-    console.log(`Pac-Man Battle Royale server on port ${PORT}`);
+    console.log(`Pac-Royal server on port ${PORT}`);
   });
 }
 

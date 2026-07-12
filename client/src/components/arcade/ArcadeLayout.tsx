@@ -25,7 +25,7 @@ export function ArcadeHeader() {
     <>
       <p className="arcade-tagline">5 PLAYERS · 1 WINNER</p>
       <h1 className="arcade-title">
-        PAC-MAN<span>BATTLE ROYALE</span>
+        PAC-<span>ROYAL</span>
       </h1>
       <div className="arcade-divider" />
     </>
@@ -42,7 +42,7 @@ export function ArcadeRuleCards() {
             🟡
           </span>
           <p className="rule-text">
-            <strong>BE PAC-MAN</strong>
+            <strong>BE PAC-ROYAL</strong>
             Eat pellets to score. Pellets respawn every 30s. Highest score after{' '}
             {MATCH_DURATION_LABEL} wins.
           </p>
@@ -53,7 +53,7 @@ export function ArcadeRuleCards() {
           </span>
           <p className="rule-text">
             <strong>HUNT AS A GHOST</strong>
-            Chase Pac-Man. Tag them and you become Pac-Man — steal the lead.
+            Chase Pac-Royal. Tag them and you become Pac-Royal — steal the lead.
           </p>
         </div>
         <div className="rule-card">
@@ -62,7 +62,7 @@ export function ArcadeRuleCards() {
           </span>
           <p className="rule-text">
             <strong>POWER PELLETS</strong>
-            Anyone can collect for points. Pac-Man gets 1.5× speed. Respawn every 30s.
+            Anyone can collect for points. Pac-Royal gets 1.5× speed. Respawn every 30s.
           </p>
         </div>
         <div className="rule-card">
@@ -71,7 +71,7 @@ export function ArcadeRuleCards() {
           </span>
           <p className="rule-text">
             <strong>BONUS FRUITS</strong>
-            One random fruit on the map. Only Pac-Man can collect: Cherry 25, Orange 50, Apple
+            One random fruit on the map. Only Pac-Royal can collect: Cherry 25, Orange 50, Apple
             75, Lemon 100 pts.
           </p>
         </div>
@@ -107,7 +107,7 @@ export function ArcadePlayers() {
           <div className="player-sprite">
             <PacManSprite />
           </div>
-          <p className="player-name">PAC-MAN</p>
+          <p className="player-name">PAC-ROYAL</p>
           <span className="player-tag tag-pac">ACTIVE</span>
         </div>
         <div className="player-card is-ghost-r">
@@ -170,7 +170,7 @@ export function ArcadeFooter() {
         <span className="life-pac" />
         <span className="life-pac" />
       </div>
-      <span className="footer-text">© PAC-MAN BATTLE ROYALE</span>
+      <span className="footer-text">© PAC-ROYAL</span>
       <span className="footer-text">v1.0</span>
     </footer>
   );

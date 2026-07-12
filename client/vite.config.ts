@@ -3,6 +3,8 @@ import path from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  // Relative asset paths so Capacitor's WebView can load the bundle from file/https localhost.
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {

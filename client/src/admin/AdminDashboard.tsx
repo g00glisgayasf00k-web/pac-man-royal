@@ -166,7 +166,7 @@ export function AdminDashboard({ token }: Props) {
     <div className="admin-dashboard">
       <header className="admin-header">
         <div>
-          <p className="admin-kicker">PAC-MAN ROYAL</p>
+          <p className="admin-kicker">PAC-ROYAL</p>
           <h1>Admin panel</h1>
         </div>
         <div className="admin-header-actions">

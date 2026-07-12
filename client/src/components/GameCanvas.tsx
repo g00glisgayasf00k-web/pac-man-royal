@@ -84,5 +84,5 @@ export function GameCanvas({ snapshot, liveSnapshotRef, blendHz = 60 }: Props) {
     };
   }, [liveSnapshotRef, blendHz]);
 
-  return <canvas ref={canvasRef} className="game-canvas" aria-label="Pac-Man Battle Royale game board" />;
+  return <canvas ref={canvasRef} className="game-canvas" aria-label="Pac-Royal game board" />;
 }

@@ -1,4 +1,4 @@
-# Publishing Pac-Man Battle Royale on Google Play
+# Publishing Pac-Royal on Google Play
 
 This project is a **web game** (React client + Node/Express server). You do not need to rewrite it in Kotlin or Flutter. The practical approach is to **wrap your live HTTPS site** in a small Android app and upload it to the Play Store.
 
@@ -47,7 +47,7 @@ Google’s official way to publish a website as a Play Store app. The app opens 
 
 ```bash
 npm install @capacitor/core @capacitor/cli @capacitor/android
-npx cap init "Pac-Man Battle Royale" com.yourname.pacmanroyal
+npx cap init "Pac-Royal" com.yourname.pacroyal
 ```
 
 For a server-backed game, either:
@@ -88,7 +88,7 @@ Use Capacitor if you may add push notifications, haptics, or other native featur
 |--------|----------|
 | **Online multiplayer** | The app must reach your Render server; do not ship an offline-only build unless you change the client config |
 | **User accounts** | Allowed on Play Store; use HTTPS and a clear privacy policy |
-| **App naming** | “Pac-Man” is a trademark. Consider a distinct store title and avoid official Nintendo branding or logos to reduce rejection risk |
+| **App naming** | Prefer “Pac-Royal” as the store title and avoid official trademarked branding or logos to reduce rejection risk |
 | **Render free tier** | The server sleeps after inactivity; cold starts can take 30–60 seconds and hurt reviews — a paid instance helps |
 | **Controls** | Swipe controls are already implemented; test on real Android devices before release |
 

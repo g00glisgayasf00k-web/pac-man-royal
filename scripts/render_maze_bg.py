@@ -1,4 +1,4 @@
-"""Render classic Pac-Man maze (double blue lines) to PNG."""
+"""Render classic Pac-Royal maze (double blue lines) to PNG."""
 from PIL import Image, ImageDraw
 import os
 

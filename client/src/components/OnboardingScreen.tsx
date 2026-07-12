@@ -2,13 +2,13 @@ import { useState } from 'react';
 
 const STEPS = [
   {
-    title: 'Battle Royale Pac-Man',
-    body: 'Five players drop from the ghost box. One starts as Pac-Man — the rest hunt as ghosts. Highest score after 3 minutes wins.',
+    title: 'Welcome to Pac-Royal',
+    body: 'Five players drop from the ghost box. One starts as Pac-Royal — the rest hunt as ghosts. Highest score after 3 minutes wins.',
     icon: '👑',
   },
   {
-    title: 'Catch to become Pac-Man',
-    body: 'Tag Pac-Man and you instantly become him. The old Pac-Man respawns as a ghost in the pen. Roles swap all match long.',
+    title: 'Catch to become Pac-Royal',
+    body: 'Tag Pac-Royal and you instantly become them. The old Pac-Royal respawns as a ghost in the pen. Roles swap all match long.',
     icon: '👻',
   },
   {

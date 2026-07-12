@@ -1,5 +1,5 @@
 /**
- * Classic Pac-Man arcade maze (28×36) — authentic ROM layout.
+ * Classic Pac-Royal arcade maze (28×36) — authentic ROM layout.
  * | wall   _ out-of-bounds   (space) walkable   . pellet   o power   - ghost gate
  */
 export const MAZE_LAYOUT: string[] = [

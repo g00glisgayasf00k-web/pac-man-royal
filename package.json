@@ -2,7 +2,7 @@
   "name": "pac-man-royal",
   "version": "1.0.0",
   "private": true,
-  "description": "Pac-Man Battle Royale — 1 Pac-Man vs 4 ghosts. Capture to become Pac-Man. First to 1000 points wins.",
+  "description": "Pac-Royal — 1 Pac-Royal vs 4 ghosts. Capture to become Pac-Royal. Highest score wins.",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "npm run dev --prefix client",
@@ -10,7 +10,8 @@
     "postinstall": "npm install --prefix client && npm install --prefix server",
     "build": "npm run build --prefix client && npm run build --prefix server",
     "start": "npx tsx server/src/index.ts",
-    "preview": "npm run preview --prefix client"
+    "preview": "npm run preview --prefix client",
+    "build:apk": "npm run build:apk --prefix android-app"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

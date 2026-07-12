@@ -4,3 +4,12 @@ dist/
 .env
 .DS_Store
 server/data/
+android-app/node_modules/
+android-app/android/.gradle/
+android-app/android/app/build/
+android-app/android/build/
+android-app/android/capacitor-cordova-android-plugins/build/
+android-apk/*.apk
+!android-apk/Pac-Royal.apk
+!android-apk/README.md
+!android-apk/icon-preview.png

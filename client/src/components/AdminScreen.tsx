@@ -80,7 +80,7 @@ export function AdminScreen() {
     return (
       <div className="admin-gate">
         <div className="admin-gate-box">
-          <p className="admin-kicker">PAC-MAN ROYAL</p>
+          <p className="admin-kicker">PAC-ROYAL</p>
           <h1>Admin</h1>
           {denied && (
             <p className="admin-error">

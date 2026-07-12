@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Pac-Royal facing right — yellow pie with mouth wedge -->
+    <path
+        android:fillColor="#FFE000"
+        android:pathData="M54,54 L77,35 A30,30 0 1,1 77,73 Z" />
+    <!-- Subtle highlight -->
+    <path
+        android:fillColor="#FFF59D"
+        android:fillAlpha="0.45"
+        android:pathData="M54,54 L68,40 A18,18 0 0,1 68,52 Z" />
+</vector>

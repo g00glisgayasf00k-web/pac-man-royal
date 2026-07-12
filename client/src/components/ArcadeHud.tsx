@@ -72,7 +72,7 @@ export function ArcadeHud({
           <span className="arcade-hud__timer">{timer}</span>
         </div>
         <span className={`arcade-hud__role${isPac ? ' arcade-hud__role--pac' : ''}`}>
-          {isPac ? 'PAC' : 'GHOST'}
+          {isPac ? 'ROYAL' : 'GHOST'}
         </span>
       </div>
 
