@@ -30,7 +30,7 @@ import { recordGameResult } from './auth/api';
 import { loadSession } from './auth/session';
 import type { AuthUser } from './auth/types';
 import { getServerUrl } from './config/api';
-import { onMatchCompleted } from './ads/interstitial';
+import { recordMatchCompleted, showPendingAdIfNeeded } from './ads/interstitial';
 
 const SERVER_URL = getServerUrl();
 
@@ -126,7 +126,7 @@ export default function GameApp({
       setScreen('win');
       if (!adCountedRef.current) {
         adCountedRef.current = true;
-        void onMatchCompleted();
+        recordMatchCompleted();
       }
     },
     [persistMatchResult, pushUiSnapshot]
@@ -216,7 +216,14 @@ export default function GameApp({
   );
 
   const startGame = useCallback(
-    (gameMode: GameMode, name: string, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => {
+    async (
+      gameMode: GameMode,
+      name: string,
+      online?: OnlineLaunchOptions,
+      solo?: SoloLaunchOptions
+    ) => {
+      await showPendingAdIfNeeded();
+
       resultRecordedRef.current = false;
       adCountedRef.current = false;
       setMode(gameMode);
@@ -364,7 +371,7 @@ export default function GameApp({
   useEffect(() => {
     if (autoStartedRef.current) return;
     autoStartedRef.current = true;
-    startGame(
+    void startGame(
       launchMode,
       user.displayName,
       launchMode === 'online' ? onlineLaunch : undefined,
@@ -377,10 +384,14 @@ export default function GameApp({
     if (snap?.status === 'ended') {
       void persistMatchResult(snap, mode);
     }
-    cleanupMatch();
-    resultRecordedRef.current = false;
-    setScreen('game');
-    startGame(mode, user.displayName);
+    // Keep the win screen up until any pending ad finishes, then start.
+    void (async () => {
+      await showPendingAdIfNeeded();
+      cleanupMatch();
+      resultRecordedRef.current = false;
+      setScreen('game');
+      await startGame(mode, user.displayName);
+    })();
   }, [cleanupMatch, mode, user.displayName, startGame, persistMatchResult]);
 
   const hudSubtitle =

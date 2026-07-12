@@ -28,7 +28,7 @@ Interstitial ads use these units (Android APK only):
 - App ID: `ca-app-pub-5778254002496678~9000407092`
 - Interstitial: `ca-app-pub-5778254002496678/3748080413`
 
-Shown after every **2** completed matches (2nd, 4th, 6th…).
+Shown after every **2** completed matches, **before** the next game starts (Play Again / Start Game).
 
 ## PixelLab icon (optional)
 
