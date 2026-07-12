@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate pixel-art Pac-Royal Android launcher PNGs for all mipmap densities.
+"""Generate pixel-art Pac-Royale Android launcher PNGs for all mipmap densities.
 
 Uses a hand-authored 24x24 pixel grid (PixelLab-style retro arcade look).
 Optional: pass --source path/to/512x512.png to composite a PixelLab export instead.
@@ -22,7 +22,7 @@ YELLOW = (255, 224, 0, 255)
 HIGHLIGHT = (255, 245, 157, 255)
 SHADOW = (201, 160, 0, 255)
 
-# 24x24 Pac-Royal facing right (mouth open east) — '.' = empty, 'Y' body, 'H' highlight, 'S' shadow
+# 24x24 Pac-Royale facing right (mouth open east) — '.' = empty, 'Y' body, 'H' highlight, 'S' shadow
 PAC_GRID = """
 ........................
 ........................
@@ -216,7 +216,7 @@ def main() -> None:
     parser.add_argument(
         "--source",
         type=Path,
-        help="Optional 512x512+ PNG from PixelLab to use as the Pac-Royal sprite",
+        help="Optional 512x512+ PNG from PixelLab to use as the Pac-Royale sprite",
     )
     args = parser.parse_args()
 
@@ -227,7 +227,7 @@ def main() -> None:
         source = Image.open(args.source)
 
     write_all_icons(source=source)
-    print("Generated pixel-art Pac-Royal Android icons in", RES)
+    print("Generated pixel-art Pac-Royale Android icons in", RES)
     if source:
         print("Used PixelLab/source image:", args.source)
 

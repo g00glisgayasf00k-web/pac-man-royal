@@ -15,7 +15,7 @@ npm install
 .\scripts\build-apk.ps1
 ```
 
-Icons are auto-generated (pixel-art Pac-Royal on dark maze background). To regenerate icons only:
+Icons are auto-generated (pixel-art Pac-Royale on dark maze background). To regenerate icons only:
 
 ```powershell
 python scripts\generate_android_icons.py

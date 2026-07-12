@@ -9,7 +9,7 @@ on:
 
 jobs:
   apk:
-    name: Assemble Pac-Royal APK
+    name: Assemble Pac-Royale APK
     runs-on: ubuntu-latest
 
     steps:
@@ -68,13 +68,13 @@ jobs:
       - name: Copy APK
         run: |
           mkdir -p android-apk
-          cp android-app/android/app/build/outputs/apk/debug/app-debug.apk android-apk/Pac-Royal.apk
-          ls -lh android-apk/Pac-Royal.apk
+          cp android-app/android/app/build/outputs/apk/debug/app-debug.apk android-apk/Pac-Royale.apk
+          ls -lh android-apk/Pac-Royale.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Pac-Royal-apk
-          path: android-apk/Pac-Royal.apk
+          name: Pac-Royale-apk
+          path: android-apk/Pac-Royale.apk
           if-no-files-found: error
           retention-days: 30

@@ -217,7 +217,7 @@ export class GameEngine {
     this.checkWin();
   }
 
-  /** Same base speed for every player. Only the current Pac-Royal may move faster (power pellet). */
+  /** Same base speed for every player. Only the current Pac-Royale may move faster (power pellet). */
   private getMoveSpeed(p: PlayerState, now: number): number {
     const isPac = p.id === this.pacmanId && p.role === 'pacman';
     if (isPac && p.speedBoostUntil > now) {

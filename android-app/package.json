@@ -2,7 +2,7 @@
   "name": "pac-man-battle-royale-android",
   "version": "1.0.0",
   "private": true,
-  "description": "Capacitor Android shell for Pac-Royal",
+  "description": "Capacitor Android shell for Pac-Royale",
   "scripts": {
     "sync": "npx cap sync android",
     "open": "npx cap open android",

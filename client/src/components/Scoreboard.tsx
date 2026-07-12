@@ -40,7 +40,7 @@ export function Scoreboard({ snapshot, highlightId }: Props) {
             <span className="name" title={p.name}>
               {p.name}
             </span>
-            {p.id === snapshot.pacmanId && <span className="role">ROYAL</span>}
+            {p.id === snapshot.pacmanId && <span className="role">ROYALE</span>}
             <span className="score">{p.score}</span>
           </li>
         ))}

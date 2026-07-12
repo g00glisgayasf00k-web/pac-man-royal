@@ -136,14 +136,14 @@
   .insert { font-size: 8px; color: #fff; text-align: center; letter-spacing: 1px; margin-bottom: 14px; }
 </style>
 
-<h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Pac-Royal welcome screen — 5 players, first to 1000 points wins</h2>
+<h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Pac-Royale welcome screen — 5 players, first to 1000 points wins</h2>
 
 <div class="screen">
   <div class="corner tl"></div><div class="corner tr"></div>
   <div class="corner bl"></div><div class="corner br"></div>
 
   <div class="tagline">5 PLAYERS · 1 WINNER</div>
-  <div class="title">PAC-<span>ROYAL</span></div>
+  <div class="title">PAC-<span>ROYALE</span></div>
 
   <div class="divider"></div>
 
@@ -151,7 +151,7 @@
     <div class="rule-card">
       <div class="rule-icon">🟡</div>
       <div class="rule-text">
-        <strong>BE PAC-ROYAL</strong>
+        <strong>BE PAC-ROYALE</strong>
         Eat pellets &amp; power-ups to rack up points. Stay ahead — ghosts are hunting you.
       </div>
     </div>
@@ -159,21 +159,21 @@
       <div class="rule-icon">👻</div>
       <div class="rule-text">
         <strong>HUNT AS A GHOST</strong>
-        Chase down Pac-Royal. Tag them and YOU become Pac-Royal — stealing the lead.
+        Chase down Pac-Royale. Tag them and YOU become Pac-Royale — stealing the lead.
       </div>
     </div>
     <div class="rule-card">
       <div class="rule-icon">🔄</div>
       <div class="rule-text">
         <strong>TAG MECHANIC</strong>
-        When a ghost catches Pac-Royal, roles swap instantly. The ex-Pac-Royal becomes a ghost.
+        When a ghost catches Pac-Royale, roles swap instantly. The ex-Pac-Royale becomes a ghost.
       </div>
     </div>
     <div class="rule-card">
       <div class="rule-icon">⚡</div>
       <div class="rule-text">
         <strong>POWER PELLETS</strong>
-        Pac-Royal eats a power pellet — ghosts turn blue &amp; vulnerable. Eat them for bonus pts!
+        Pac-Royale eats a power pellet — ghosts turn blue &amp; vulnerable. Eat them for bonus pts!
       </div>
     </div>
   </div>
@@ -190,7 +190,7 @@
             <circle cx="22" cy="12" r="3" fill="#000"/>
           </svg>
         </div>
-        <div class="player-name">PAC-ROYAL</div>
+        <div class="player-name">PAC-ROYALE</div>
         <span class="player-tag tag-pac">ACTIVE</span>
       </div>
 
@@ -257,8 +257,8 @@
   <p class="insert blink">— PRESS START —</p>
 
   <div class="btn-row">
-    <button class="btn-play" onclick="sendPrompt('Build the full Pac-Royal game — maze, 5-player logic, tag mechanic, score tracking to 1000 points ↗')">▶ START GAME ↗</button>
-    <button class="btn-sec" onclick="sendPrompt('Show me the leaderboard and settings screen for Pac-Royal')">OPTIONS</button>
+    <button class="btn-play" onclick="sendPrompt('Build the full Pac-Royale game — maze, 5-player logic, tag mechanic, score tracking to 1000 points ↗')">▶ START GAME ↗</button>
+    <button class="btn-sec" onclick="sendPrompt('Show me the leaderboard and settings screen for Pac-Royale')">OPTIONS</button>
   </div>
 
   <div class="footer">
@@ -267,7 +267,7 @@
       <div class="life-pac"></div>
       <div class="life-pac"></div>
     </div>
-    <div class="footer-text">© PAC-ROYAL</div>
+    <div class="footer-text">© PAC-ROYALE</div>
     <div class="footer-text">v1.0</div>
   </div>
 </div>

@@ -1,12 +1,12 @@
-# Pac-Royal — Android APK
+# Pac-Royale — Android APK
 
 This folder contains the installable Android app (debug build).
 
 ## Install on your phone
 
-1. Copy `Pac-Royal.apk` to your Android device.
+1. Copy `Pac-Royale.apk` to your Android device.
 2. Open the file and allow **Install from unknown sources** if prompted.
-3. Launch **Pac-Royal**.
+3. Launch **Pac-Royale**.
 
 ## Controls
 

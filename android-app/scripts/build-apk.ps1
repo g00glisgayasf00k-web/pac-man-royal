@@ -22,7 +22,7 @@ $env:JAVA_HOME = $Jdk
 $env:ANDROID_HOME = $Sdk
 $env:PATH = "$Jdk\bin;$Sdk\platform-tools;$env:PATH"
 
-Write-Host ">> Generating Pac-Royal launcher icons..."
+Write-Host ">> Generating Pac-Royale launcher icons..."
 python (Join-Path $AndroidApp "scripts\generate_android_icons.py")
 
 Write-Host ">> Building web client..."
@@ -51,7 +51,7 @@ if (-not (Test-Path $ApkSrc)) {
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
-$ApkDst = Join-Path $OutDir "Pac-Royal.apk"
+$ApkDst = Join-Path $OutDir "Pac-Royale.apk"
 Copy-Item -Force $ApkSrc $ApkDst
 
 Write-Host ""

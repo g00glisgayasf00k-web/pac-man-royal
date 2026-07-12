@@ -1,6 +1,6 @@
 {
   "appId": "com.pacmanbattleroyale.game",
-  "appName": "Pac-Royal",
+  "appName": "Pac-Royale",
   "webDir": "../client/dist",
   "android": {
     "allowMixedContent": true

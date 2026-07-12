@@ -10,6 +10,6 @@ android-app/android/app/build/
 android-app/android/build/
 android-app/android/capacitor-cordova-android-plugins/build/
 android-apk/*.apk
-!android-apk/Pac-Royal.apk
+!android-apk/Pac-Royale.apk
 !android-apk/README.md
 !android-apk/icon-preview.png

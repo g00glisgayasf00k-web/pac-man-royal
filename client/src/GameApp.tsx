@@ -407,7 +407,7 @@ export default function GameApp({
         <button type="button" className="btn-exit" onClick={exitToWelcome}>
           MENU
         </button>
-        <span className="mobile-top-bar__title">PAC-ROYAL</span>
+        <span className="mobile-top-bar__title">PAC-ROYALE</span>
         {mode === 'local' && (
           <span className="mobile-top-bar__tag">
             {soloDifficultyLabel(soloLaunchRef.current.difficulty)}

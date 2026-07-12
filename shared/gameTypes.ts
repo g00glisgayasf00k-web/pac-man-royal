@@ -16,7 +16,7 @@ export const MAX_SIM_STEPS_PER_FRAME = 5;
 export const UI_SNAPSHOT_HZ = 10;
 /** Online game-state broadcasts per second (server sim still runs at 60Hz) */
 export const NETWORK_SNAPSHOT_HZ = 30;
-/** Tiles per second — same for Pac-Royal and ghosts */
+/** Tiles per second — same for Pac-Royale and ghosts */
 export const MOVE_SPEED = 2.3;
 
 /** Power pellet speed boost for whoever collects it */
@@ -158,7 +158,7 @@ export interface OnlineLobbySnapshot {
 export const PLAYER_COLORS = ['#FFD700', '#FF4444', '#FF69B4', '#00FFFF', '#FF8C00'];
 
 /** Display names matching the welcome screen player cards */
-export const PACMAN_DISPLAY_NAME = 'PAC-ROYAL';
+export const PACMAN_DISPLAY_NAME = 'PAC-ROYALE';
 export const GHOST_AI_NAMES = ['BLINKY', 'PINKY', 'INKY', 'CLYDE'] as const;
 
 export const PLAYER_NAMES = [PACMAN_DISPLAY_NAME, ...GHOST_AI_NAMES];

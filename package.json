@@ -2,7 +2,7 @@
   "name": "pac-man-royal",
   "version": "1.0.0",
   "private": true,
-  "description": "Pac-Royal — 1 Pac-Royal vs 4 ghosts. Capture to become Pac-Royal. Highest score wins.",
+  "description": "Pac-Royale — 1 Pac-Royale vs 4 ghosts. Capture to become Pac-Royale. Highest score wins.",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "npm run dev --prefix client",

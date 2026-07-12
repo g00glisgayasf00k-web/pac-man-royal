@@ -4,7 +4,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Pac-Royal facing right — yellow pie with mouth wedge -->
+    <!-- Pac-Royale facing right — yellow pie with mouth wedge -->
     <path
         android:fillColor="#FFE000"
         android:pathData="M54,54 L77,35 A30,30 0 1,1 77,73 Z" />

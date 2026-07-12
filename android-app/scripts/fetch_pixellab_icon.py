@@ -3,9 +3,9 @@
 
 PixelLab MCP usage (when you have credits):
   1. create_ui_asset(
-       description="retro arcade app icon, yellow pixel Pac-Royal facing right on dark navy maze grid",
+       description="retro arcade app icon, yellow pixel Pac-Royale facing right on dark navy maze grid",
        width=512, height=512, no_background=False,
-       name="Pac-Royal Icon"
+       name="Pac-Royale Icon"
      )
   2. Poll get_ui_asset(ui_asset_id) until status is completed
   3. Run this script with the download URL or a saved PNG:

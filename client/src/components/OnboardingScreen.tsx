@@ -2,13 +2,13 @@ import { useState } from 'react';
 
 const STEPS = [
   {
-    title: 'Welcome to Pac-Royal',
-    body: 'Five players drop from the ghost box. One starts as Pac-Royal — the rest hunt as ghosts. Highest score after 3 minutes wins.',
+    title: 'Welcome to Pac-Royale',
+    body: 'Five players drop from the ghost box. One starts as Pac-Royale — the rest hunt as ghosts. Highest score after 3 minutes wins.',
     icon: '👑',
   },
   {
-    title: 'Catch to become Pac-Royal',
-    body: 'Tag Pac-Royal and you instantly become them. The old Pac-Royal respawns as a ghost in the pen. Roles swap all match long.',
+    title: 'Catch to become Pac-Royale',
+    body: 'Tag Pac-Royale and you instantly become them. The old Pac-Royale respawns as a ghost in the pen. Roles swap all match long.',
     icon: '👻',
   },
   {
