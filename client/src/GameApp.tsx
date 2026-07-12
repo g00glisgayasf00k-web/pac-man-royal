@@ -30,6 +30,7 @@ import { recordGameResult } from './auth/api';
 import { loadSession } from './auth/session';
 import type { AuthUser } from './auth/types';
 import { getServerUrl } from './config/api';
+import { onMatchCompleted } from './ads/interstitial';
 
 const SERVER_URL = getServerUrl();
 
@@ -76,6 +77,7 @@ export default function GameApp({
   const uiAccumRef = useRef(0);
   const liveSnapshotRef = useRef<GameSnapshot | null>(null);
   const resultRecordedRef = useRef(false);
+  const adCountedRef = useRef(false);
   const autoStartedRef = useRef(false);
   const onlineLaunchRef = useRef(onlineLaunch);
   onlineLaunchRef.current = onlineLaunch;
@@ -117,6 +119,19 @@ export default function GameApp({
     [playerId, onScoreRecorded]
   );
 
+  const finishMatch = useCallback(
+    (snap: GameSnapshot, gameMode: GameMode) => {
+      void persistMatchResult(snap, gameMode);
+      pushUiSnapshot(snap);
+      setScreen('win');
+      if (!adCountedRef.current) {
+        adCountedRef.current = true;
+        void onMatchCompleted();
+      }
+    },
+    [persistMatchResult, pushUiSnapshot]
+  );
+
   const startLocalLoop = useCallback(() => {
     stopLoop();
     let last = performance.now();
@@ -149,16 +164,14 @@ export default function GameApp({
       }
 
       if (snap.status === 'ended') {
-        void persistMatchResult(snap, 'local');
-        pushUiSnapshot(snap);
-        setScreen('win');
+        finishMatch(snap, 'local');
         stopLoop();
         return;
       }
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
-  }, [stopLoop, pushUiSnapshot, UI_DT, persistMatchResult]);
+  }, [stopLoop, UI_DT, finishMatch]);
 
   const cleanupMatch = useCallback(() => {
     stopLoop();
@@ -205,6 +218,7 @@ export default function GameApp({
   const startGame = useCallback(
     (gameMode: GameMode, name: string, online?: OnlineLaunchOptions, solo?: SoloLaunchOptions) => {
       resultRecordedRef.current = false;
+      adCountedRef.current = false;
       setMode(gameMode);
       if (gameMode === 'online') {
         const join = online ?? onlineLaunchRef.current;
@@ -243,8 +257,7 @@ export default function GameApp({
           }
 
           if (snap.status === 'ended') {
-            setScreen('win');
-            setSnapshot(snap);
+            finishMatch(snap, 'online');
           }
         });
 
@@ -284,7 +297,7 @@ export default function GameApp({
       setScreen('game');
       startLocalLoop();
     },
-    [startLocalLoop, handleJoinResponse, exitToWelcome]
+    [startLocalLoop, handleJoinResponse, exitToWelcome, finishMatch, UI_DT]
   );
 
   const sendInput = useCallback(

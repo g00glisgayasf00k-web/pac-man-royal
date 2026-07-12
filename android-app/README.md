@@ -21,7 +21,16 @@ Icons are auto-generated (pixel-art Pac-Royal on dark maze background). To regen
 python scripts\generate_android_icons.py
 ```
 
-### PixelLab icon (optional)
+## Ads (AdMob)
+
+Interstitial ads use these units (Android APK only):
+
+- App ID: `ca-app-pub-5778254002496678~9000407092`
+- Interstitial: `ca-app-pub-5778254002496678/3748080413`
+
+Shown after every **2** completed matches (2nd, 4th, 6th…).
+
+## PixelLab icon (optional)
 
 If you have [PixelLab](https://pixellab.ai) credits, generate a 512×512 icon via the PixelLab MCP (`create_ui_asset`) or the PixelLab web app, then apply it:
 

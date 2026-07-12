@@ -23,7 +23,7 @@
   .tagline { font-size: 8px; color: #FF8000; letter-spacing: 3px; text-align: center; margin-bottom: 8px; }
 
   .title { font-size: 28px; color: #FFE000; text-align: center; letter-spacing: 2px; line-height: 1.3; text-shadow: 3px 3px 0 #AA7000; }
-  .title span { color: #FF4444; display: block; }
+  .title span { color: #FF4444; display: inline; }
 
   .divider { height: 2px; background: #2121DE; margin: 18px 0; opacity: 0.6; }
 

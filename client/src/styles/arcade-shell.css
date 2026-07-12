@@ -72,7 +72,8 @@
 
 .arcade-gate .arcade-title span {
   color: #ff4444;
-  display: block;
+  -webkit-text-fill-color: #ff4444;
+  display: inline;
 }
 
 .arcade-gate .arcade-divider {
